@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hadith Image Maker</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Nastaliq+Urdu:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg:         #0d0f14;
+      --surface:    #161a23;
+      --surface2:   #1e2333;
+      --border:     #2a3045;
+      --accent:     #c8a96e;
+      --text:       #e8e4da;
+      --text-muted: #7a8098;
+      --radius:     12px;
+      --tr:         .22s cubic-bezier(.4,0,.2,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Lato', sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; padding: 2rem 1rem 4rem;
+    }
+    header { text-align: center; margin-bottom: 2.8rem; }
+    header h1 {
+      font-size: clamp(1.4rem,3vw,2rem); font-weight: 300;
+      letter-spacing: .18em; text-transform: uppercase; color: var(--accent);
+    }
+    header p { font-size: .85rem; color: var(--text-muted); margin-top: .4rem; letter-spacing: .06em; }
+    .app {
+      width: 100%; max-width: 1160px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;
+    }
+    @media (max-width: 740px) { .app { grid-template-columns: 1fr; } }
+    .panel { display: flex; flex-direction: column; gap: 1.4rem; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.4rem;
+    }
+    .card-title {
+      font-size: .7rem; letter-spacing: .15em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 1rem; font-weight: 700;
+    }
+    /* Upload */
+    .upload-zone {
+      border: 2px dashed var(--border); border-radius: 8px;
+      padding: 2rem 1rem; text-align: center; cursor: pointer;
+      transition: border-color var(--tr), background var(--tr); position: relative;
+    }
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--accent); background: rgba(200,169,110,.04);
+    }
+    .upload-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-icon { font-size: 2rem; margin-bottom: .5rem; opacity: .5; }
+    .upload-zone p { font-size: .82rem; color: var(--text-muted); }
+    .upload-zone .hint { font-size: .72rem; color: var(--text-muted); margin-top: .3rem; opacity: .6; }
+    /* Fields */
+    .field { display: flex; flex-direction: column; gap: .5rem; }
+    .field label {
+      font-size: .72rem; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text-muted); font-weight: 700;
+    }
+    .field label span { color: var(--accent); margin-left: .3rem; font-size: .65rem; }
+    textarea, input[type="text"], select {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); padding: .75rem 1rem; font-size: 1rem; resize: vertical;
+      transition: border-color var(--tr); width: 100%;
+    }
+    textarea:focus, input[type="text"]:focus, select:focus {
+      outline: none; border-color: var(--accent);
+    }
+    #hadithText {
+      font-family: 'Amiri', serif; font-size: 1.2rem;
+      direction: rtl; text-align: right; min-height: 90px; line-height: 1.9;
+    }
+    #translationText.urdu {
+      font-family: 'Noto Nastaliq Urdu', serif; font-size: 1rem;
+      direction: rtl; text-align: right; min-height: 70px; line-height: 2;
+    }
+    #translationText.english {
+      font-family: 'Lato', sans-serif; font-size: .95rem;
+      direction: ltr; text-align: left; min-height: 70px;
+    }
+    select {
+      -webkit-appearance: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a8098' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem;
+    }
+    /* Color row */
+    .color-row { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .color-row label { font-size: .72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .1em; white-space: nowrap; }
+    input[type="color"] {
+      width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 6px;
+      background: var(--surface2); cursor: pointer; padding: 2px;
+    }
+    /* Slider row */
+    .slider-row { display: flex; align-items: center; gap: .6rem; margin-bottom: .6rem; }
+    .slider-row label {
+      font-size: .68rem; color: var(--text-muted); text-transform: uppercase;
+      letter-spacing: .08em; white-space: nowrap; min-width: 84px;
+    }
+    input[type="range"] { flex: 1; accent-color: var(--accent); cursor: pointer; }
+    .slider-val { font-size: .73rem; color: var(--accent); min-width: 38px; text-align: right; font-weight: 700; }
+    /* Toggle */
+    .toggle-group { display: flex; gap: .5rem; }
+    .toggle-btn {
+      flex: 1; padding: .55rem .5rem; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--surface2); color: var(--text-muted); font-size: .78rem; cursor: pointer;
+      transition: all var(--tr); text-align: center; letter-spacing: .04em;
+    }
+    .toggle-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(200,169,110,.08); }
+    /* Download btn */
+    .btn-download {
+      width: 100%; padding: 1rem;
+      background: linear-gradient(135deg, var(--accent) 0%, #e8c880 100%);
+      color: #1a1200; border: none; border-radius: var(--radius);
+      font-size: .9rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      cursor: pointer; transition: filter var(--tr), transform var(--tr);
+    }
+    .btn-download:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn-download:active { transform: translateY(0); filter: brightness(.95); }
+    .btn-download:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    /* Preview */
+    .preview-wrap { position: sticky; top: 2rem; align-self: start; }
+    .preview-label { font-size: .7rem; letter-spacing: .15em; text-transform: uppercase; color: var(--text-muted); margin-bottom: .8rem; }
+    .canvas-container {
+      width: 100%; aspect-ratio: 9/16; border-radius: var(--radius);
+      overflow: hidden; background: var(--surface); border: 1px solid var(--border); position: relative;
+    }
+    #previewCanvas { width: 100%; height: 100%; display: block; }
+    .no-image-msg {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: var(--text-muted); font-size: .85rem; gap: .5rem; pointer-events: none;
+    }
+    .no-image-msg .big { font-size: 2.5rem; opacity: .3; }
+    /* Section note */
+    .section-note { font-size: .72rem; color: var(--text-muted); margin-bottom: .9rem; line-height: 1.5; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Hadith Image Maker</h1>
+  <p>Upload · Overlay · Download</p>
+</header>
+
+<div class="app">
+
+  <!-- ═══ CONTROLS ═══ -->
+  <div class="panel">
+
+    <!-- 1 — Image -->
+    <div class="card">
+      <div class="card-title">1 — Image</div>
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="imageUpload" accept="image/*" />
+        <div class="upload-icon">🖼️</div>
+        <p>Click or drag &amp; drop a 9:16 image</p>
+        <p class="hint">JPG · PNG · WEBP — any portrait image works</p>
+      </div>
+    </div>
+
+    <!-- 2 — Text -->
+    <div class="card">
+      <div class="card-title">2 — Text</div>
+
+      <div class="field" style="margin-bottom:1rem;">
+        <label>Hadith <span>Arabic</span></label>
+        <textarea id="hadithText" placeholder="اكتب الحديث هنا..." rows="4"></textarea>
+      </div>
+
+      <div class="field" style="margin-bottom:.6rem;">
+        <label>Translation Language</label>
+        <select id="langSelect">
+          <option value="english">English</option>
+          <option value="urdu">Urdu</option>
+        </select>
+      </div>
+
+      <div class="field" style="margin-bottom:1rem;">
+        <label>Translation <span id="langLabel">English</span></label>
+        <textarea id="translationText" class="english" placeholder="Enter translation here..." rows="3"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Source</label>
+        <input type="text" id="sourceText" placeholder="e.g. Sahih al-Bukhari 6412" />
+      </div>
+    </div>
+
+    <!-- 3 — Style -->
+    <div class="card">
+      <div class="card-title">3 — Style &amp; Font Sizes</div>
+
+      <div class="field" style="margin-bottom:1rem;">
+        <label>Overlay Background</label>
+        <div class="toggle-group">
+          <div class="toggle-btn active" data-mode="gradient" onclick="setOverlayMode(this)">Gradient</div>
+          <div class="toggle-btn" data-mode="solid" onclick="setOverlayMode(this)">Solid</div>
+          <div class="toggle-btn" data-mode="none" onclick="setOverlayMode(this)">None</div>
+        </div>
+      </div>
+
+      <div class="color-row">
+        <label>Text Color</label>
+        <input type="color" id="textColor" value="#ffffff" />
+        <label>Accent Color</label>
+        <input type="color" id="accentColor" value="#c8a96e" />
+      </div>
+
+      <div class="slider-row">
+        <label>Arabic Size</label>
+        <input type="range" id="arabicSize" min="20" max="80" value="42" />
+        <span class="slider-val" id="arabicSizeVal">42</span>
+      </div>
+      <div class="slider-row">
+        <label>Trans. Size</label>
+        <input type="range" id="transSize" min="14" max="52" value="26" />
+        <span class="slider-val" id="transSizeVal">26</span>
+      </div>
+      <div class="slider-row" style="margin-bottom:0">
+        <label>Source Size</label>
+        <input type="range" id="sourceSize" min="10" max="36" value="18" />
+        <span class="slider-val" id="sourceSizeVal">18</span>
+      </div>
+    </div>
+
+    <!-- 4 — Position Y -->
+    <div class="card">
+      <div class="card-title">4 — Vertical Position (Y Axis)</div>
+      <p class="section-note">Slide to move each element up ↑ or down ↓ on the canvas. Value = % from top.</p>
+
+      <div class="slider-row">
+        <label>Arabic Y</label>
+        <input type="range" id="arabicY" min="0" max="85" value="8" />
+        <span class="slider-val" id="arabicYVal">8%</span>
+      </div>
+      <div class="slider-row">
+        <label>Trans. Y</label>
+        <input type="range" id="transY" min="5" max="90" value="62" />
+        <span class="slider-val" id="transYVal">62%</span>
+      </div>
+      <div class="slider-row">
+        <label>Source Y</label>
+        <input type="range" id="sourceY" min="10" max="98" value="88" />
+        <span class="slider-val" id="sourceYVal">88%</span>
+      </div>
+      <div class="slider-row" style="margin-bottom:0">
+        <label>Watermark Y</label>
+        <input type="range" id="watermarkY" min="50" max="99" value="94" />
+        <span class="slider-val" id="watermarkYVal">94%</span>
+      </div>
+    </div>
+
+    <!-- 5 — Watermark -->
+    <div class="card">
+      <div class="card-title">5 — Watermark Logo</div>
+      <p class="section-note">Logo is auto-loaded and centered horizontally. Adjust size and opacity below.</p>
+
+      <div class="slider-row">
+        <label>Width (px)</label>
+        <input type="range" id="watermarkW" min="60" max="500" value="220" />
+        <span class="slider-val" id="watermarkWVal">220px</span>
+      </div>
+      <div class="slider-row" style="margin-bottom:0">
+        <label>Opacity</label>
+        <input type="range" id="watermarkOpacity" min="5" max="100" value="85" />
+        <span class="slider-val" id="watermarkOpacityVal">85%</span>
+      </div>
+    </div>
+
+    <!-- Download -->
+    <button class="btn-download" id="downloadBtn" disabled onclick="downloadImage()">
+      ⬇ Download PNG
+    </button>
+
+  </div>
+
+  <!-- ═══ PREVIEW ═══ -->
+  <div class="preview-wrap">
+    <div class="preview-label">Live Preview — 1080 × 1920</div>
+    <div class="canvas-container">
+      <canvas id="previewCanvas" width="1080" height="1920"></canvas>
+      <div class="no-image-msg" id="noImageMsg">
+        <span class="big">📷</span>
+        <span>Upload an image to begin</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════
+   Hadith Image Maker v2
+   — Y-axis position sliders for every text element
+   — Watermark logo auto-loaded from ibb.co
+   ════════════════════════════════════════════════════════ */
+
+// ── App state ─────────────────────────────────────────
+const state = {
+  image:            null,       // uploaded background image
+  hadith:           '',
+  translation:      '',
+  source:           '',
+  lang:             'english',
+  overlayMode:      'gradient',
+  textColor:        '#ffffff',
+  accentColor:      '#c8a96e',
+  // Font sizes (canvas px)
+  arabicSize:       42,
+  transSize:        26,
+  sourceSize:       18,
+  // Y positions as percentage of canvas height (0 = top, 100 = bottom)
+  arabicYPct:       8,
+  transYPct:        62,
+  sourceYPct:       88,
+  watermarkYPct:    94,
+  // Watermark
+  watermarkW:       220,
+  watermarkOpacity: 0.85,
+};
+
+// ── Canvas ────────────────────────────────────────────
+const canvas = document.getElementById('previewCanvas');
+const ctx    = canvas.getContext('2d');
+const W = 1080, H = 1920;
+canvas.width = W; canvas.height = H;
+
+// ── Watermark image (pre-load) ────────────────────────
+const wmImg = new Image();
+wmImg.crossOrigin = 'anonymous';
+wmImg.onload  = render;
+wmImg.onerror = () => console.warn('Watermark could not load — will be skipped on canvas.');
+wmImg.src = 'https://i.ibb.co/7qMK13S/watermark.png';
+
+// ── DOM refs ──────────────────────────────────────────
+const uploadZone  = document.getElementById('uploadZone');
+const noImageMsg  = document.getElementById('noImageMsg');
+const downloadBtn = document.getElementById('downloadBtn');
+
+// Wait for Google Fonts before first render
+document.fonts.ready.then(render);
+
+// ── Text input bindings ───────────────────────────────
+document.getElementById('hadithText').addEventListener('input', e => { state.hadith = e.target.value; render(); });
+document.getElementById('translationText').addEventListener('input', e => { state.translation = e.target.value; render(); });
+document.getElementById('sourceText').addEventListener('input', e => { state.source = e.target.value; render(); });
+
+document.getElementById('langSelect').addEventListener('change', e => {
+  state.lang = e.target.value;
+  document.getElementById('langLabel').textContent = state.lang === 'urdu' ? 'Urdu' : 'English';
+  const ta = document.getElementById('translationText');
+  ta.className = state.lang;
+  ta.placeholder = state.lang === 'urdu' ? 'ترجمہ یہاں لکھیں...' : 'Enter translation here...';
+  render();
+});
+
+document.getElementById('textColor').addEventListener('input',   e => { state.textColor   = e.target.value; render(); });
+document.getElementById('accentColor').addEventListener('input', e => { state.accentColor = e.target.value; render(); });
+
+// ── Slider bindings ───────────────────────────────────
+// Each entry: [elementId, stateKey, labelId, formatter]
+[
+  ['arabicSize',       'arabicSize',       'arabicSizeVal',       v => v],
+  ['transSize',        'transSize',        'transSizeVal',        v => v],
+  ['sourceSize',       'sourceSize',       'sourceSizeVal',       v => v],
+  ['arabicY',          'arabicYPct',       'arabicYVal',          v => v + '%'],
+  ['transY',           'transYPct',        'transYVal',           v => v + '%'],
+  ['sourceY',          'sourceYPct',       'sourceYVal',          v => v + '%'],
+  ['watermarkY',       'watermarkYPct',    'watermarkYVal',       v => v + '%'],
+  ['watermarkW',       'watermarkW',       'watermarkWVal',       v => v + 'px'],
+  ['watermarkOpacity', 'watermarkOpacity', 'watermarkOpacityVal', v => v + '%'],
+].forEach(([id, key, labelId, fmt]) => {
+  document.getElementById(id).addEventListener('input', e => {
+    const raw = parseFloat(e.target.value);
+    // opacity stored as 0–1 fraction
+    state[key] = key === 'watermarkOpacity' ? raw / 100 : raw;
+    document.getElementById(labelId).textContent = fmt(raw);
+    render();
+  });
+});
+
+// ── Image upload ──────────────────────────────────────
+document.getElementById('imageUpload').addEventListener('change', e => loadFile(e.target.files[0]));
+uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault(); uploadZone.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+});
+
+function loadFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      state.image = img;
+      noImageMsg.style.display = 'none';
+      downloadBtn.disabled = false;
+      render();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Overlay mode toggle ───────────────────────────────
+function setOverlayMode(btn) {
+  document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.overlayMode = btn.dataset.mode;
+  render();
+}
+
+// ── RENDER ────────────────────────────────────────────
+function render() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Dark background base
+  ctx.fillStyle = '#0d0d0d';
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Draw background image (object-cover) ──────────
+  if (state.image) {
+    const img   = state.image;
+    const imgAR = img.width / img.height;
+    const canAR = W / H;
+    let sx = 0, sy = 0, sw = img.width, sh = img.height;
+    if (imgAR > canAR) { sw = img.height * canAR; sx = (img.width - sw) / 2; }
+    else               { sh = img.width  / canAR; sy = (img.height - sh) / 2; }
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
+  }
+
+  // ── Scrim / Overlay ────────────────────────────────
+  if (state.overlayMode === 'gradient') {
+    // Top scrim (for hadith)
+    const tg = ctx.createLinearGradient(0, 0, 0, H * 0.52);
+    tg.addColorStop(0, 'rgba(0,0,0,0.80)');
+    tg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = tg; ctx.fillRect(0, 0, W, H * 0.52);
+    // Bottom scrim (for translation, source, watermark)
+    const bg = ctx.createLinearGradient(0, H * 0.44, 0, H);
+    bg.addColorStop(0, 'rgba(0,0,0,0)');
+    bg.addColorStop(1, 'rgba(0,0,0,0.88)');
+    ctx.fillStyle = bg; ctx.fillRect(0, H * 0.44, W, H * 0.56);
+  } else if (state.overlayMode === 'solid') {
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0, 0, W, H);
+  }
+
+  // ── Helper: wrap text into lines ──────────────────
+  function wrapText(text, maxW, font) {
+    ctx.font = font;
+    const words = text.split(' ');
+    const lines = [];
+    let cur = '';
+    for (const w of words) {
+      const test = cur ? cur + ' ' + w : w;
+      if (ctx.measureText(test).width > maxW && cur) { lines.push(cur); cur = w; }
+      else cur = test;
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  }
+
+  /** Draw a centered block of lines. Returns Y after last line. */
+  function drawBlock(lines, font, color, startY, lineH) {
+    ctx.font = font; ctx.fillStyle = color;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.shadowColor = 'rgba(0,0,0,0.88)'; ctx.shadowBlur = 22; ctx.shadowOffsetY = 3;
+    let y = startY;
+    for (const line of lines) { ctx.fillText(line, W / 2, y); y += lineH; }
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    return y;
+  }
+
+  /** Gold gradient horizontal divider */
+  function drawDivider(y) {
+    const g = ctx.createLinearGradient(W * 0.15, y, W * 0.85, y);
+    g.addColorStop(0,   'rgba(200,169,110,0)');
+    g.addColorStop(0.5, state.accentColor);
+    g.addColorStop(1,   'rgba(200,169,110,0)');
+    ctx.strokeStyle = g; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(W * 0.15, y); ctx.lineTo(W * 0.85, y); ctx.stroke();
+  }
+
+  const pad  = 70;        // horizontal padding (each side)
+  const maxW = W - pad*2; // usable text width
+
+  // ── 1. Arabic Hadith ──────────────────────────────
+  const arabicFont  = `bold ${state.arabicSize}px 'Amiri', serif`;
+  const arabicLineH = state.arabicSize * 1.85;
+  const arabicLines = state.hadith ? wrapText(state.hadith, maxW, arabicFont) : [];
+  const arabicY     = H * (state.arabicYPct / 100);
+
+  if (arabicLines.length) {
+    ctx.direction = 'rtl';
+    const endY = drawBlock(arabicLines, arabicFont, state.textColor, arabicY, arabicLineH);
+    ctx.direction = 'ltr';
+    // Divider below arabic block (if other content follows)
+    if (state.translation || state.source) drawDivider(endY + 28);
+  }
+
+  // ── 2. Translation ────────────────────────────────
+  const isUrdu     = state.lang === 'urdu';
+  const transFam   = isUrdu ? "'Noto Nastaliq Urdu', serif" : "'Lato', sans-serif";
+  const transFont  = `${state.transSize}px ${transFam}`;
+  const transLineH = state.transSize * (isUrdu ? 2.2 : 1.6);
+  const transLines = state.translation ? wrapText(state.translation, maxW, transFont) : [];
+  const transY     = H * (state.transYPct / 100);
+
+  if (transLines.length) {
+    if (isUrdu) ctx.direction = 'rtl';
+    drawBlock(transLines, transFont, state.textColor, transY, transLineH);
+    ctx.direction = 'ltr';
+  }
+
+  // ── 3. Source ─────────────────────────────────────
+  const sourceY = H * (state.sourceYPct / 100);
+
+  if (state.source) {
+    drawDivider(sourceY - 30); // divider above source
+    const srcFont = `italic ${state.sourceSize}px 'Lato', sans-serif`;
+    ctx.font = srcFont; ctx.fillStyle = state.accentColor;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.shadowColor = 'rgba(0,0,0,0.95)'; ctx.shadowBlur = 16;
+    ctx.fillText('\u2014 ' + state.source + ' \u2014', W / 2, sourceY);
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
+  }
+
+  // ── 4. Watermark logo ─────────────────────────────
+  if (wmImg.complete && wmImg.naturalWidth > 0) {
+    const wmW   = state.watermarkW;
+    const ratio = wmImg.naturalHeight / wmImg.naturalWidth;
+    const wmH   = wmW * ratio;
+    const wmX   = (W - wmW) / 2;                        // centered horizontally
+    const wmY   = H * (state.watermarkYPct / 100) - wmH / 2; // centered on Y%
+
+    ctx.globalAlpha = state.watermarkOpacity;
+    ctx.drawImage(wmImg, wmX, wmY, wmW, wmH);
+    ctx.globalAlpha = 1;
+  }
+
+  // ── 5. Subtle vignette ────────────────────────────
+  const vig = ctx.createRadialGradient(W/2, H/2, H*0.28, W/2, H/2, H*0.82);
+  vig.addColorStop(0, 'rgba(0,0,0,0)');
+  vig.addColorStop(1, 'rgba(0,0,0,0.28)');
+  ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
+}
+
+// ── Download full-resolution PNG ──────────────────────
+function downloadImage() {
+  render(); // ensure latest state
+  const link = document.createElement('a');
+  link.download = 'hadith-' + Date.now() + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+// Kick off
+render();
+</script>
+</body>
+</html>
