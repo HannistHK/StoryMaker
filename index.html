@@ -90,6 +90,10 @@
       font-family: 'Lato', sans-serif; font-size: .95rem;
       direction: ltr; text-align: left; min-height: 70px;
     }
+    #urduText {
+      font-family: 'Noto Nastaliq Urdu', serif; font-size: 1rem;
+      direction: rtl; text-align: right; min-height: 70px; line-height: 2;
+    }
     select {
       -webkit-appearance: none; appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a8098' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
@@ -192,9 +196,14 @@
         <textarea id="translationText" class="english" placeholder="Enter translation here..." rows="3"></textarea>
       </div>
 
-      <div class="field">
+      <div class="field" style="margin-bottom:1rem;">
         <label>Source</label>
         <input type="text" id="sourceText" placeholder="e.g. Sahih al-Bukhari 6412" />
+      </div>
+
+      <div class="field">
+        <label>Urdu Text <span>اردو</span></label>
+        <textarea id="urduText" placeholder="اردو متن یہاں لکھیں..." rows="3"></textarea>
       </div>
     </div>
 
@@ -228,10 +237,15 @@
         <input type="range" id="transSize" min="14" max="52" value="26" />
         <span class="slider-val" id="transSizeVal">26</span>
       </div>
-      <div class="slider-row" style="margin-bottom:0">
+      <div class="slider-row">
         <label>Source Size</label>
         <input type="range" id="sourceSize" min="10" max="36" value="18" />
         <span class="slider-val" id="sourceSizeVal">18</span>
+      </div>
+      <div class="slider-row" style="margin-bottom:0">
+        <label>Urdu Size</label>
+        <input type="range" id="urduSize" min="14" max="52" value="26" />
+        <span class="slider-val" id="urduSizeVal">26</span>
       </div>
     </div>
 
@@ -247,8 +261,13 @@
       </div>
       <div class="slider-row">
         <label>Trans. Y</label>
-        <input type="range" id="transY" min="5" max="90" value="62" />
-        <span class="slider-val" id="transYVal">62%</span>
+        <input type="range" id="transY" min="5" max="90" value="55" />
+        <span class="slider-val" id="transYVal">55%</span>
+      </div>
+      <div class="slider-row">
+        <label>Urdu Y</label>
+        <input type="range" id="urduY" min="5" max="98" value="72" />
+        <span class="slider-val" id="urduYVal">72%</span>
       </div>
       <div class="slider-row">
         <label>Source Y</label>
@@ -313,6 +332,7 @@ const state = {
   hadith:           '',
   translation:      '',
   source:           '',
+  urdu:             '',
   lang:             'english',
   overlayMode:      'gradient',
   textColor:        '#ffffff',
@@ -321,10 +341,12 @@ const state = {
   arabicSize:       42,
   transSize:        26,
   sourceSize:       18,
+  urduSize:         26,
   // Y positions as percentage of canvas height (0 = top, 100 = bottom)
   arabicYPct:       8,
-  transYPct:        62,
+  transYPct:        55,
   sourceYPct:       88,
+  urduYPct:         72,
   watermarkYPct:    94,
   // Watermark
   watermarkW:       220,
@@ -356,6 +378,7 @@ document.fonts.ready.then(render);
 document.getElementById('hadithText').addEventListener('input', e => { state.hadith = e.target.value; render(); });
 document.getElementById('translationText').addEventListener('input', e => { state.translation = e.target.value; render(); });
 document.getElementById('sourceText').addEventListener('input', e => { state.source = e.target.value; render(); });
+document.getElementById('urduText').addEventListener('input', e => { state.urdu = e.target.value; render(); });
 
 document.getElementById('langSelect').addEventListener('change', e => {
   state.lang = e.target.value;
@@ -375,9 +398,11 @@ document.getElementById('accentColor').addEventListener('input', e => { state.ac
   ['arabicSize',       'arabicSize',       'arabicSizeVal',       v => v],
   ['transSize',        'transSize',        'transSizeVal',        v => v],
   ['sourceSize',       'sourceSize',       'sourceSizeVal',       v => v],
+  ['urduSize',         'urduSize',         'urduSizeVal',         v => v],
   ['arabicY',          'arabicYPct',       'arabicYVal',          v => v + '%'],
   ['transY',           'transYPct',        'transYVal',           v => v + '%'],
   ['sourceY',          'sourceYPct',       'sourceYVal',          v => v + '%'],
+  ['urduY',            'urduYPct',         'urduYVal',            v => v + '%'],
   ['watermarkY',       'watermarkYPct',    'watermarkYVal',       v => v + '%'],
   ['watermarkW',       'watermarkW',       'watermarkWVal',       v => v + 'px'],
   ['watermarkOpacity', 'watermarkOpacity', 'watermarkOpacityVal', v => v + '%'],
@@ -512,7 +537,7 @@ function render() {
     if (state.translation || state.source) drawDivider(endY + 28);
   }
 
-  // ── 2. Translation ────────────────────────────────
+  // ── 2. Translation (English) ─────────────────────
   const isUrdu     = state.lang === 'urdu';
   const transFam   = isUrdu ? "'Noto Nastaliq Urdu', serif" : "'Lato', sans-serif";
   const transFont  = `${state.transSize}px ${transFam}`;
@@ -526,7 +551,19 @@ function render() {
     ctx.direction = 'ltr';
   }
 
-  // ── 3. Source ─────────────────────────────────────
+  // ── 3. Urdu Text ──────────────────────────────────
+  const urduFont  = `${state.urduSize}px 'Noto Nastaliq Urdu', serif`;
+  const urduLineH = state.urduSize * 2.2;
+  const urduLines = state.urdu ? wrapText(state.urdu, maxW, urduFont) : [];
+  const urduY     = H * (state.urduYPct / 100);
+
+  if (urduLines.length) {
+    ctx.direction = 'rtl';
+    drawBlock(urduLines, urduFont, state.textColor, urduY, urduLineH);
+    ctx.direction = 'ltr';
+  }
+
+  // ── 4. Source ─────────────────────────────────────
   const sourceY = H * (state.sourceYPct / 100);
 
   if (state.source) {
