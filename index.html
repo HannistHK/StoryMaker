@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Hadith Image Maker v3</title>
 
-<!-- Fonts: Amiri Quran (closest to Hafs), Noto Nastaliq Urdu, Lato -->
+<!-- Fonts: Amiri Quran (Arabic), Merriweather (English), Gulzar (Urdu) -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:ital,wght@0,400;0,700&family=Noto+Nastaliq+Urdu:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:ital,wght@0,400;0,700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Gulzar&display=swap" rel="stylesheet"/>
 
 <style>
 /* ── Design Tokens ─────────────────────────────── */
@@ -27,7 +27,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
 body {
-  font-family:'Lato',sans-serif;
+  font-family:'Merriweather',Georgia,serif;
   background:var(--bg);color:var(--text);
   min-height:100vh;display:flex;flex-direction:column;
   align-items:center;padding:2rem 1rem 5rem;
@@ -83,12 +83,12 @@ textarea:focus,input[type="text"]:focus,select:focus{outline:none;border-color:v
   direction:rtl;text-align:right;min-height:80px;line-height:2.1;
 }
 #translationText{
-  font-family:'Lato',sans-serif;font-size:.9rem;
-  direction:ltr;text-align:left;min-height:60px;line-height:1.6;
+  font-family:'Merriweather',Georgia,serif;font-size:.88rem;
+  direction:ltr;text-align:left;min-height:60px;line-height:1.8;
 }
 #urduText{
-  font-family:'Noto Nastaliq Urdu',serif;font-size:1rem;
-  direction:rtl;text-align:right;min-height:65px;line-height:2.4;
+  font-family:'Gulzar',serif;font-size:1rem;
+  direction:rtl;text-align:right;min-height:65px;line-height:2.6;
 }
 select{
   -webkit-appearance:none;appearance:none;
@@ -220,17 +220,17 @@ input[type="color"]{width:32px;height:32px;border:1px solid var(--border);border
     <div class="card-title">2 — Text Content</div>
 
     <div class="field">
-      <label>Hadith <span class="badge">Arabic · Amiri Quran</span></label>
+      <label>Hadith <span class="badge">Amiri Quran</span></label>
       <textarea id="hadithText" placeholder="اكتب الحديث هنا..." rows="4"></textarea>
     </div>
 
     <div class="field">
-      <label>English Translation <span class="badge">Lato</span></label>
+      <label>English Translation <span class="badge">Merriweather</span></label>
       <textarea id="translationText" placeholder="Enter English translation..." rows="3"></textarea>
     </div>
 
     <div class="field">
-      <label>Urdu Translation <span class="badge">Nastaliq</span></label>
+      <label>Urdu Translation <span class="badge">Gulzar</span></label>
       <textarea id="urduText" placeholder="اردو ترجمہ یہاں لکھیں..." rows="3"></textarea>
     </div>
 
@@ -811,9 +811,9 @@ function computeLayout(W, H, maxW) {
   }
 
   const arabicFont  = `bold ${S.arabicSize}px 'Amiri Quran','Amiri',serif`;
-  const transFont   = `${S.transSize}px 'Lato',sans-serif`;
-  const urduFont    = `${S.urduSize}px 'Noto Nastaliq Urdu',serif`;
-  const sourceFont  = `italic ${S.sourceSize}px 'Lato',sans-serif`;
+  const transFont   = `${S.transSize}px 'Merriweather',Georgia,serif`;
+  const urduFont    = `${S.urduSize}px 'Gulzar',serif`;
+  const sourceFont  = `italic ${S.sourceSize}px 'Merriweather',Georgia,serif`;
 
   const arLineH   = S.arabicSize  * S.arLineHeight;
   const enLineH   = S.transSize   * S.engLineHeight;
