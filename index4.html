@@ -1,0 +1,2185 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hadith Image Maker v5</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:ital,wght@0,400;0,700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Gulzar&family=Cinzel:wght@400;600&display=swap" rel="stylesheet"/>
+
+<style>
+@font-face {
+  font-family: 'Hafs';
+  src: url('https://raw.githubusercontent.com/thetruetruth/quran-data-kfgqpc/main/hafs/font/hafs.18.ttf') format('truetype');
+  font-weight: normal; font-style: normal; font-display: swap;
+}
+
+/* ═══════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════ */
+:root {
+  --bg:       #080b10;
+  --surface:  #0f1218;
+  --surface2: #161b25;
+  --surface3: #1c2233;
+  --border:   #242d3f;
+  --border2:  #2e3a52;
+  --accent:   #c8a96e;
+  --accent2:  #e8c880;
+  --accent3:  #f0d99a;
+  --danger:   #e05555;
+  --success:  #5a9e6f;
+  --text:     #e2ddd4;
+  --muted:    #5a6680;
+  --muted2:   #7a8aaa;
+  --radius:   10px;
+  --radius-sm:6px;
+  --tr:       .2s cubic-bezier(.4,0,.2,1);
+  --shadow:   0 4px 24px rgba(0,0,0,.45);
+}
+
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Merriweather', Georgia, serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem 6rem;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(200,169,110,.06) 0%, transparent 60%);
+}
+
+/* ═══════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════ */
+header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  position: relative;
+}
+header::after {
+  content: '';
+  display: block;
+  width: 80px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  margin: 1rem auto 0;
+}
+header h1 {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(1.2rem, 2.8vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-shadow: 0 0 40px rgba(200,169,110,.3);
+}
+header p {
+  font-size: .78rem;
+  color: var(--muted2);
+  margin-top: .4rem;
+  letter-spacing: .1em;
+  font-weight: 300;
+}
+.undo-redo {
+  position: absolute;
+  right: 0; top: 50%;
+  transform: translateY(-50%);
+  display: flex; gap: .4rem;
+}
+.undo-redo button {
+  width: 32px; height: 32px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  background: var(--surface2);
+  color: var(--muted2);
+  font-size: .85rem;
+  cursor: pointer;
+  transition: all var(--tr);
+  display: flex; align-items: center; justify-content: center;
+}
+.undo-redo button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.undo-redo button:disabled { opacity: .25; cursor: not-allowed; }
+
+/* ═══════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════ */
+.app {
+  width: 100%;
+  max-width: 1240px;
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 1.8rem;
+  align-items: start;
+}
+@media (max-width: 900px) { .app { grid-template-columns: 1fr; } }
+
+.panel { display: flex; flex-direction: column; gap: .65rem; }
+
+/* ═══════════════════════════════════════════════
+   CARDS / ACCORDION
+═══════════════════════════════════════════════ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color var(--tr);
+}
+.card:hover { border-color: var(--border2); }
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .9rem 1.25rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--tr);
+}
+.card-header:hover { background: rgba(255,255,255,.02); }
+
+.card-title {
+  font-size: .63rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+  font-family: 'Cinzel', serif;
+  display: flex; align-items: center; gap: .5rem;
+}
+.card-title-num {
+  background: rgba(200,169,110,.12);
+  border: 1px solid rgba(200,169,110,.25);
+  border-radius: 4px;
+  padding: .1rem .35rem;
+  font-size: .55rem;
+  color: var(--accent);
+}
+
+.card-chevron {
+  font-size: .65rem;
+  color: var(--muted);
+  transition: transform var(--tr);
+  display: inline-block;
+}
+.card.open .card-chevron { transform: rotate(180deg); }
+
+.card-body {
+  padding: 0 1.25rem;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .38s cubic-bezier(.4,0,.2,1), padding .38s;
+}
+.card.open .card-body { max-height: 3000px; padding: .15rem 1.25rem 1.3rem; }
+
+.card.always-open .card-header { cursor: default; }
+.card.always-open .card-header:hover { background: none; }
+.card.always-open .card-chevron { display: none; }
+.card.always-open .card-body { max-height: none; padding: .15rem 1.25rem 1.3rem; overflow: visible; }
+
+.section-note { font-size: .68rem; color: var(--muted2); margin-bottom: .8rem; line-height: 1.6; }
+.card-sep { border: none; border-top: 1px solid var(--border); margin: .9rem 0; }
+
+/* ═══════════════════════════════════════════════
+   UPLOAD
+═══════════════════════════════════════════════ */
+.upload-zone {
+  border: 2px dashed var(--border2);
+  border-radius: 9px;
+  padding: 1.8rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--tr), background var(--tr);
+  position: relative;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(200,169,110,.03);
+}
+.upload-zone input[type="file"] {
+  position: absolute; inset: 0;
+  opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.upload-icon { font-size: 1.7rem; margin-bottom: .4rem; opacity: .35; }
+.upload-zone p { font-size: .8rem; color: var(--muted2); }
+.upload-zone .hint { font-size: .66rem; color: var(--muted); margin-top: .3rem; }
+
+.img-preview {
+  display: none;
+  width: 100%;
+  border-radius: 8px;
+  margin-top: .7rem;
+  max-height: 120px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+.img-preview.visible { display: block; }
+
+/* ═══════════════════════════════════════════════
+   FIELDS
+═══════════════════════════════════════════════ */
+.field { display: flex; flex-direction: column; gap: .4rem; margin-bottom: .9rem; }
+.field:last-child { margin-bottom: 0; }
+
+.field label {
+  font-size: .66rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  font-weight: 700;
+  display: flex; align-items: center; gap: .35rem;
+}
+.badge {
+  color: var(--accent);
+  font-size: .58rem;
+  background: rgba(200,169,110,.1);
+  border: 1px solid rgba(200,169,110,.2);
+  padding: .1rem .32rem;
+  border-radius: 3px;
+  letter-spacing: .04em;
+}
+
+textarea, input[type="text"], input[type="url"], select {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text);
+  padding: .65rem .9rem;
+  font-size: .9rem;
+  resize: vertical;
+  transition: border-color var(--tr), box-shadow var(--tr);
+  width: 100%;
+  font-family: inherit;
+}
+textarea:focus, input[type="text"]:focus, input[type="url"]:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(200,169,110,.1);
+}
+
+#hadithText {
+  font-family: 'Hafs','Amiri Quran','Amiri',serif;
+  font-size: 1.22rem; direction: rtl; text-align: right;
+  min-height: 80px; line-height: 2.1;
+}
+#translationText {
+  font-family: 'Merriweather',Georgia,serif;
+  font-size: .88rem; direction: ltr; text-align: left;
+  min-height: 60px; line-height: 1.8;
+}
+#urduText {
+  font-family: 'Gulzar',serif;
+  font-size: 1rem; direction: rtl; text-align: right;
+  min-height: 65px; line-height: 2.6;
+}
+select {
+  -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235a6680' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .9rem center;
+  padding-right: 2.2rem;
+}
+
+/* ═══════════════════════════════════════════════
+   SLIDERS
+═══════════════════════════════════════════════ */
+.slider-row {
+  display: flex; align-items: center; gap: .55rem; margin-bottom: .5rem;
+}
+.slider-row:last-child { margin-bottom: 0; }
+.slider-row label {
+  font-size: .63rem; color: var(--muted2);
+  text-transform: uppercase; letter-spacing: .07em;
+  white-space: nowrap; min-width: 78px;
+}
+input[type="range"] {
+  flex: 1; accent-color: var(--accent);
+  cursor: pointer; height: 3px;
+  -webkit-appearance: none;
+  background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--val, 50%), var(--border2) var(--val, 50%));
+  border-radius: 2px;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(200,169,110,.4);
+}
+.slider-val {
+  font-size: .68rem; color: var(--accent);
+  min-width: 38px; text-align: right;
+  font-weight: 700; font-family: monospace;
+}
+
+/* ═══════════════════════════════════════════════
+   COLORS
+═══════════════════════════════════════════════ */
+.color-row {
+  display: flex; align-items: center; gap: .6rem;
+  flex-wrap: wrap; margin-bottom: .9rem;
+}
+.color-row label {
+  font-size: .63rem; color: var(--muted2);
+  text-transform: uppercase; letter-spacing: .07em;
+}
+input[type="color"] {
+  width: 34px; height: 34px;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  background: var(--surface2);
+  cursor: pointer; padding: 2px;
+  transition: border-color var(--tr);
+}
+input[type="color"]:hover { border-color: var(--accent); }
+
+/* ═══════════════════════════════════════════════
+   TOGGLE GROUPS
+═══════════════════════════════════════════════ */
+.toggle-group { display: flex; gap: .35rem; flex-wrap: wrap; }
+.toggle-btn {
+  flex: 1; min-width: 55px;
+  padding: .44rem .4rem;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface2);
+  color: var(--muted2);
+  font-size: .7rem;
+  cursor: pointer;
+  transition: all var(--tr);
+  text-align: center;
+  letter-spacing: .03em;
+  white-space: nowrap;
+  font-family: inherit;
+}
+.toggle-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(200,169,110,.08);
+}
+.toggle-btn:hover:not(.active) {
+  border-color: rgba(200,169,110,.35);
+  color: var(--text);
+}
+
+/* ═══════════════════════════════════════════════
+   PRESET GRID
+═══════════════════════════════════════════════ */
+.preset-row {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: .4rem;
+  margin-bottom: .9rem;
+}
+.preset-btn {
+  padding: .5rem .3rem;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface2);
+  color: var(--muted2);
+  font-size: .68rem;
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--tr);
+  font-family: inherit;
+}
+.preset-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(200,169,110,.05); }
+
+/* ═══════════════════════════════════════════════
+   ALIGNMENT
+═══════════════════════════════════════════════ */
+.align-group { display: flex; gap: .4rem; }
+.align-btn {
+  flex: 1; padding: .42rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface2);
+  color: var(--muted2);
+  font-size: .88rem; cursor: pointer;
+  transition: all var(--tr); text-align: center;
+  font-family: inherit;
+}
+.align-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(200,169,110,.07); }
+
+/* ═══════════════════════════════════════════════
+   SWITCH
+═══════════════════════════════════════════════ */
+.autolayout-row {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-bottom: .8rem;
+}
+.autolayout-row label.label-text {
+  font-size: .68rem; color: var(--muted2);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+.switch { position: relative; width: 40px; height: 22px; cursor: pointer; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch-track {
+  position: absolute; inset: 0;
+  border-radius: 22px; background: var(--border2);
+  transition: background var(--tr);
+}
+.switch input:checked + .switch-track { background: var(--accent); }
+.switch-thumb {
+  position: absolute; top: 4px; left: 4px;
+  width: 14px; height: 14px;
+  background: #fff; border-radius: 50%;
+  transition: transform var(--tr);
+  pointer-events: none;
+}
+.switch input:checked ~ .switch-thumb { transform: translateX(18px); }
+
+/* ═══════════════════════════════════════════════
+   WATERMARK SECTION
+═══════════════════════════════════════════════ */
+.wm-mode-tabs {
+  display: flex; gap: .3rem; margin-bottom: .9rem;
+}
+.wm-tab {
+  flex: 1; padding: .45rem .3rem;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface2);
+  color: var(--muted2);
+  font-size: .68rem;
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--tr);
+  font-family: inherit;
+}
+.wm-tab.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(200,169,110,.08);
+}
+.wm-panel { display: none; }
+.wm-panel.visible { display: block; }
+
+.wm-preview-box {
+  width: 100%; height: 80px;
+  border: 1px dashed var(--border2);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: .7rem;
+  font-size: .72rem; color: var(--muted);
+  overflow: hidden;
+  background: var(--surface2);
+  position: relative;
+}
+.wm-preview-box img {
+  max-width: 100%; max-height: 100%;
+  object-fit: contain;
+}
+.wm-error {
+  font-size: .7rem;
+  color: var(--danger);
+  margin-top: .35rem;
+  display: none;
+}
+.wm-error.visible { display: block; }
+
+.url-load-btn {
+  padding: .55rem .9rem;
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  background: var(--surface2);
+  color: var(--muted2);
+  font-size: .75rem;
+  cursor: pointer;
+  transition: all var(--tr);
+  white-space: nowrap;
+  font-family: inherit;
+}
+.url-load-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.url-row { display: flex; gap: .5rem; align-items: center; margin-bottom: .7rem; }
+.url-row input { flex: 1; }
+
+/* ═══════════════════════════════════════════════
+   EXPORT
+═══════════════════════════════════════════════ */
+.export-row {
+  display: flex; gap: .6rem; align-items: center; margin-bottom: .7rem;
+}
+.export-row label {
+  font-size: .66rem; color: var(--muted2);
+  white-space: nowrap; text-transform: uppercase; letter-spacing: .08em;
+}
+.export-row select { flex: 1; }
+
+.btn-export {
+  width: 100%; padding: .95rem;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+  color: #1a1100;
+  border: none; border-radius: var(--radius);
+  font-size: .85rem; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  cursor: pointer;
+  transition: filter var(--tr), transform var(--tr), box-shadow var(--tr);
+  font-family: 'Cinzel', serif;
+  position: relative; overflow: hidden;
+}
+.btn-export::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.15), transparent);
+  opacity: 0; transition: opacity var(--tr);
+}
+.btn-export:hover:not(:disabled)::after { opacity: 1; }
+.btn-export:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(200,169,110,.3);
+}
+.btn-export:active:not(:disabled) { transform: translateY(0); filter: brightness(.95); }
+.btn-export:disabled { opacity: .3; cursor: not-allowed; transform: none; }
+
+/* ═══════════════════════════════════════════════
+   LOADING OVERLAY
+═══════════════════════════════════════════════ */
+.loading-bar {
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  position: fixed; top: 0; left: 0;
+  width: 0; z-index: 100;
+  transition: width .3s ease, opacity .3s;
+  border-radius: 0 2px 2px 0;
+}
+
+/* ═══════════════════════════════════════════════
+   PREVIEW PANE
+═══════════════════════════════════════════════ */
+.preview-wrap {
+  position: sticky; top: 1.5rem; align-self: start;
+}
+.preview-header {
+  font-size: .63rem; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--muted2);
+  margin-bottom: .75rem;
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'Cinzel', serif;
+}
+.preview-header span { color: var(--accent); font-size: .6rem; }
+
+.canvas-container {
+  width: 100%; aspect-ratio: 9/16;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  position: relative;
+  box-shadow: var(--shadow);
+}
+#previewCanvas { width: 100%; height: 100%; display: block; }
+
+.no-image-msg {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: var(--muted); font-size: .8rem;
+  gap: .45rem; pointer-events: none;
+}
+.no-image-msg .big { font-size: 2.5rem; opacity: .18; }
+
+.canvas-spinner {
+  position: absolute; inset: 0;
+  display: none;
+  align-items: center; justify-content: center;
+  background: rgba(8,11,16,.6);
+  backdrop-filter: blur(4px);
+}
+.canvas-spinner.visible { display: flex; }
+.spinner-ring {
+  width: 38px; height: 38px;
+  border: 3px solid rgba(200,169,110,.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Drag-to-position watermark hint */
+.drag-hint {
+  position: absolute; bottom: .6rem; left: 50%; transform: translateX(-50%);
+  font-size: .6rem; color: var(--muted); letter-spacing: .06em;
+  white-space: nowrap; pointer-events: none;
+  opacity: 0; transition: opacity .3s;
+}
+.drag-hint.visible { opacity: 1; }
+
+/* ═══════════════════════════════════════════════
+   KEYBOARD SHORTCUT TOOLTIP
+═══════════════════════════════════════════════ */
+.kbd {
+  display: inline-block;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: .05rem .35rem;
+  font-size: .6rem;
+  color: var(--muted2);
+  font-family: monospace;
+  margin-left: .3rem;
+}
+
+/* ═══════════════════════════════════════════════
+   TOAST NOTIFICATIONS
+═══════════════════════════════════════════════ */
+.toast-container {
+  position: fixed; bottom: 2rem; right: 2rem;
+  display: flex; flex-direction: column; gap: .5rem;
+  z-index: 200; pointer-events: none;
+}
+.toast {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 9px;
+  padding: .65rem 1.1rem;
+  font-size: .78rem;
+  color: var(--text);
+  box-shadow: var(--shadow);
+  animation: toastIn .25s ease, toastOut .25s ease 2.5s forwards;
+  pointer-events: auto;
+  max-width: 280px;
+  display: flex; align-items: center; gap: .55rem;
+}
+.toast.success { border-color: rgba(90,158,111,.4); }
+.toast.error   { border-color: rgba(224,85,85,.4); }
+.toast .toast-icon { font-size: 1rem; flex-shrink: 0; }
+@keyframes toastIn  { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
+@keyframes toastOut { from { opacity:1; } to { opacity:0; pointer-events:none; } }
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE TWEAKS
+═══════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  body { padding: 1.2rem .75rem 4rem; }
+  .preset-row { grid-template-columns: repeat(2, 1fr); }
+  .undo-redo { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Loading bar -->
+<div class="loading-bar" id="loadingBar"></div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<header>
+  <h1>Hadith Image Maker</h1>
+  <p>Upload · Compose · Export — fully client-side &amp; offline-capable</p>
+  <div class="undo-redo">
+    <button id="undoBtn" title="Undo (Ctrl+Z)" disabled>↩</button>
+    <button id="redoBtn" title="Redo (Ctrl+Y)" disabled>↪</button>
+  </div>
+</header>
+
+<div class="app">
+
+<!-- ══════════════════════════════════════════
+     LEFT PANEL — CONTROLS
+══════════════════════════════════════════ -->
+<div class="panel">
+
+  <!-- 1 — Background Image -->
+  <div class="card always-open">
+    <div class="card-header">
+      <div class="card-title">
+        <span class="card-title-num">01</span>
+        Background Image
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="imageUpload" accept="image/*" aria-label="Upload background image"/>
+        <div class="upload-icon">🖼️</div>
+        <p>Click or drag &amp; drop an image</p>
+        <p class="hint">JPG · PNG · WEBP — portrait 9:16 recommended</p>
+      </div>
+      <img id="bgPreview" class="img-preview" alt="Background preview"/>
+    </div>
+  </div>
+
+  <!-- 2 — Text Content -->
+  <div class="card open" id="card-text">
+    <div class="card-header" onclick="toggleCard('card-text')">
+      <div class="card-title"><span class="card-title-num">02</span>Text Content</div>
+      <span class="card-chevron" aria-hidden="true">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="field">
+        <label>Hadith <span class="badge">Hafs</span></label>
+        <textarea id="hadithText" placeholder="اكتب الحديث هنا..." rows="4" aria-label="Hadith text in Arabic"></textarea>
+      </div>
+      <div class="field">
+        <label>English Translation <span class="badge">Merriweather</span></label>
+        <textarea id="translationText" placeholder="Enter English translation..." rows="3" aria-label="English translation"></textarea>
+      </div>
+      <div class="field">
+        <label>Urdu Translation <span class="badge">Gulzar</span></label>
+        <textarea id="urduText" placeholder="اردو ترجمہ یہاں لکھیں..." rows="3" aria-label="Urdu translation"></textarea>
+      </div>
+      <div class="field">
+        <label>Source Reference</label>
+        <input type="text" id="sourceText" placeholder="e.g. Sahih al-Bukhari 6412"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 — Typography & Style -->
+  <div class="card" id="card-typo">
+    <div class="card-header" onclick="toggleCard('card-typo')">
+      <div class="card-title"><span class="card-title-num">03</span>Typography &amp; Style</div>
+      <span class="card-chevron" aria-hidden="true">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="section-note">Quick style presets:</div>
+      <div class="preset-row">
+        <button class="preset-btn" onclick="applyPreset('classic')">Classic</button>
+        <button class="preset-btn" onclick="applyPreset('minimal')">Minimal</button>
+        <button class="preset-btn" onclick="applyPreset('bold')">Bold</button>
+        <button class="preset-btn" onclick="applyPreset('dark')">Dark</button>
+      </div>
+      <hr class="card-sep"/>
+      <div class="color-row">
+        <label>Text</label>   <input type="color" id="textColor"   value="#ffffff" aria-label="Text color"/>
+        <label>Accent</label> <input type="color" id="accentColor" value="#c8a96e" aria-label="Accent color"/>
+        <label>Shadow</label> <input type="color" id="shadowColor" value="#000000" aria-label="Shadow color"/>
+      </div>
+      <hr class="card-sep"/>
+      <div class="slider-row">
+        <label>Arabic px</label>
+        <input type="range" id="arabicSize" min="24" max="90" value="60" aria-label="Arabic font size"/>
+        <span class="slider-val" id="arabicSizeVal">60</span>
+      </div>
+      <div class="slider-row">
+        <label>English px</label>
+        <input type="range" id="transSize" min="16" max="54" value="40" aria-label="English font size"/>
+        <span class="slider-val" id="transSizeVal">40</span>
+      </div>
+      <div class="slider-row">
+        <label>Urdu px</label>
+        <input type="range" id="urduSize" min="18" max="60" value="50" aria-label="Urdu font size"/>
+        <span class="slider-val" id="urduSizeVal">50</span>
+      </div>
+      <div class="slider-row">
+        <label>Source px</label>
+        <input type="range" id="sourceSize" min="12" max="38" value="25" aria-label="Source font size"/>
+        <span class="slider-val" id="sourceSizeVal">25</span>
+      </div>
+      <hr class="card-sep"/>
+      <div class="slider-row">
+        <label>EN Spacing</label>
+        <input type="range" id="engLetterSpacing" min="-2" max="10" value="0" step="0.5"/>
+        <span class="slider-val" id="engLetterSpacingVal">0</span>
+      </div>
+      <div class="slider-row">
+        <label>EN Line H</label>
+        <input type="range" id="engLineHeight" min="1.0" max="2.5" value="1.6" step="0.05"/>
+        <span class="slider-val" id="engLineHeightVal">1.6</span>
+      </div>
+      <div class="slider-row">
+        <label>AR Line H</label>
+        <input type="range" id="arLineHeight" min="1.4" max="3.0" value="2.0" step="0.05"/>
+        <span class="slider-val" id="arLineHeightVal">2.0</span>
+      </div>
+      <div class="slider-row">
+        <label>UR Line H</label>
+        <input type="range" id="urLineHeight" min="1.8" max="3.5" value="2.0" step="0.05"/>
+        <span class="slider-val" id="urLineHeightVal">2.0</span>
+      </div>
+      <hr class="card-sep"/>
+      <div class="field" style="margin-bottom:.6rem">
+        <label>English Alignment</label>
+        <div class="align-group">
+          <button class="align-btn" data-align="left">⬅</button>
+          <button class="align-btn active" data-align="center">↔</button>
+          <button class="align-btn" data-align="right">➡</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 — Background & Overlay -->
+  <div class="card" id="card-overlay">
+    <div class="card-header" onclick="toggleCard('card-overlay')">
+      <div class="card-title"><span class="card-title-num">04</span>Background &amp; Overlay</div>
+      <span class="card-chevron" aria-hidden="true">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="field">
+        <label>Overlay Type</label>
+        <div class="toggle-group" id="overlayModeGroup">
+          <button class="toggle-btn active" data-mode="gradient">Gradient</button>
+          <button class="toggle-btn" data-mode="solid">Solid</button>
+          <button class="toggle-btn" data-mode="frosted">Frosted</button>
+          <button class="toggle-btn" data-mode="box">Text Box</button>
+          <button class="toggle-btn" data-mode="none">None</button>
+        </div>
+      </div>
+      <hr class="card-sep"/>
+      <div class="slider-row">
+        <label>Overlay α</label>
+        <input type="range" id="overlayOpacity" min="0" max="100" value="75"/>
+        <span class="slider-val" id="overlayOpacityVal">75%</span>
+      </div>
+      <div class="slider-row">
+        <label>Shadow α</label>
+        <input type="range" id="shadowStrength" min="0" max="100" value="80"/>
+        <span class="slider-val" id="shadowStrengthVal">80%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5 — Layout & Position -->
+  <div class="card" id="card-layout">
+    <div class="card-header" onclick="toggleCard('card-layout')">
+      <div class="card-title"><span class="card-title-num">05</span>Layout &amp; Position</div>
+      <span class="card-chevron" aria-hidden="true">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="autolayout-row">
+        <span class="label-text">Auto-stack layout</span>
+        <label class="switch" aria-label="Toggle auto-stack layout">
+          <input type="checkbox" id="autoLayout" checked/>
+          <div class="switch-track"></div>
+          <div class="switch-thumb"></div>
+        </label>
+      </div>
+      <p class="section-note" id="autoLayoutNote">Elements stack automatically with even spacing. Disable for manual Y control.</p>
+
+      <div id="manualYControls" style="display:none">
+        <div class="slider-row">
+          <label>Arabic Y</label>
+          <input type="range" id="arabicY" min="0" max="85" value="6"/>
+          <span class="slider-val" id="arabicYVal">6%</span>
+        </div>
+        <div class="slider-row">
+          <label>English Y</label>
+          <input type="range" id="transY" min="5" max="90" value="52"/>
+          <span class="slider-val" id="transYVal">52%</span>
+        </div>
+        <div class="slider-row">
+          <label>Urdu Y</label>
+          <input type="range" id="urduY" min="5" max="95" value="68"/>
+          <span class="slider-val" id="urduYVal">68%</span>
+        </div>
+        <div class="slider-row">
+          <label>Source Y</label>
+          <input type="range" id="sourceY" min="10" max="97" value="84"/>
+          <span class="slider-val" id="sourceYVal">84%</span>
+        </div>
+      </div>
+
+      <div id="autoLayoutControls">
+        <div class="slider-row">
+          <label>Top Margin</label>
+          <input type="range" id="topMargin" min="2" max="20" value="20"/>
+          <span class="slider-val" id="topMarginVal">20%</span>
+        </div>
+        <div class="slider-row">
+          <label>Bot Margin</label>
+          <input type="range" id="botMargin" min="2" max="25" value="15"/>
+          <span class="slider-val" id="botMarginVal">15%</span>
+        </div>
+        <div class="slider-row">
+          <label>H Padding</label>
+          <input type="range" id="hPadding" min="30" max="160" value="30"/>
+          <span class="slider-val" id="hPaddingVal">30px</span>
+        </div>
+        <div class="slider-row">
+          <label>Box Padding</label>
+          <input type="range" id="boxPadding" min="10" max="80" value="44"/>
+          <span class="slider-val" id="boxPaddingVal">44px</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6 — Watermark (DYNAMIC) -->
+  <div class="card" id="card-watermark">
+    <div class="card-header" onclick="toggleCard('card-watermark')">
+      <div class="card-title"><span class="card-title-num">06</span>Watermark</div>
+      <span class="card-chevron" aria-hidden="true">▾</span>
+    </div>
+    <div class="card-body">
+      <!-- Mode tabs -->
+      <div class="wm-mode-tabs" id="wmModeTabs">
+        <button class="wm-tab active" data-wm="image">📁 Image</button>
+        <button class="wm-tab" data-wm="url">🌐 URL</button>
+        <button class="wm-tab" data-wm="text">✏️ Text</button>
+        <button class="wm-tab" data-wm="none">🚫 None</button>
+      </div>
+
+      <!-- Image upload panel -->
+      <div class="wm-panel visible" id="wm-panel-image">
+        <div class="wm-preview-box" id="wmPreviewBox">
+          <span id="wmPreviewPlaceholder" style="color:var(--muted);font-size:.72rem;">No image selected</span>
+          <img id="wmPreviewImg" style="display:none;max-width:100%;max-height:80px;object-fit:contain;" alt="Watermark preview"/>
+        </div>
+        <div class="upload-zone" id="wmUploadZone" style="padding:1rem;">
+          <input type="file" id="wmImageUpload" accept="image/*" aria-label="Upload watermark image"/>
+          <p style="font-size:.75rem;">Click or drag watermark image</p>
+          <p class="hint">PNG with transparency recommended</p>
+        </div>
+      </div>
+
+      <!-- URL panel -->
+      <div class="wm-panel" id="wm-panel-url">
+        <div class="wm-preview-box">
+          <img id="wmUrlPreviewImg" style="display:none;max-width:100%;max-height:80px;object-fit:contain;" alt="Watermark URL preview"/>
+          <span id="wmUrlPreviewPlaceholder" style="color:var(--muted);font-size:.72rem;">Enter URL below</span>
+        </div>
+        <div class="url-row">
+          <input type="url" id="wmUrlInput" placeholder="https://example.com/logo.png"/>
+          <button class="url-load-btn" id="wmUrlLoadBtn">Load</button>
+        </div>
+        <div class="wm-error" id="wmUrlError">⚠ Failed to load image. Check URL or CORS policy.</div>
+      </div>
+
+      <!-- Text panel -->
+      <div class="wm-panel" id="wm-panel-text">
+        <div class="field" style="margin-bottom:.7rem">
+          <label>Watermark Text</label>
+          <input type="text" id="wmTextInput" placeholder="@YourChannel" value="@YourChannel"/>
+        </div>
+        <div class="color-row" style="margin-bottom:.5rem;">
+          <label>Color</label>
+          <input type="color" id="wmTextColor" value="#ffffff" aria-label="Watermark text color"/>
+        </div>
+        <div class="field" style="margin-bottom:.7rem">
+          <label>Alignment</label>
+          <div class="toggle-group" id="wmTextAlignGroup">
+            <button class="toggle-btn active" data-wm-align="left">Left</button>
+            <button class="toggle-btn" data-wm-align="center">Center</button>
+            <button class="toggle-btn" data-wm-align="right">Right</button>
+          </div>
+        </div>
+        <div class="slider-row">
+          <label>Font Size</label>
+          <input type="range" id="wmTextSize" min="20" max="100" value="40"/>
+          <span class="slider-val" id="wmTextSizeVal">40</span>
+        </div>
+      </div>
+
+      <!-- None panel -->
+      <div class="wm-panel" id="wm-panel-none">
+        <p class="section-note" style="margin:0;">Watermark is disabled. No logo or text will appear on the exported image.</p>
+      </div>
+
+      <hr class="card-sep"/>
+      <!-- Shared controls for image/url/text modes -->
+      <div id="wmSharedControls">
+        <div class="slider-row">
+          <label>Opacity</label>
+          <input type="range" id="watermarkOpacity" min="5" max="100" value="100"/>
+          <span class="slider-val" id="watermarkOpacityVal">100%</span>
+        </div>
+        <div class="slider-row">
+          <label>Scale</label>
+          <input type="range" id="wmScale" min="10" max="200" value="60"/>
+          <span class="slider-val" id="wmScaleVal">60%</span>
+        </div>
+        <div class="slider-row">
+          <label>Pos X</label>
+          <input type="range" id="wmPosX" min="0" max="100" value="50"/>
+          <span class="slider-val" id="wmPosXVal">50%</span>
+        </div>
+        <div class="slider-row">
+          <label>Pos Y</label>
+          <input type="range" id="wmPosY" min="50" max="99" value="93"/>
+          <span class="slider-val" id="wmPosYVal">93%</span>
+        </div>
+        <div class="slider-row">
+          <label>Rotation</label>
+          <input type="range" id="wmRotation" min="-45" max="45" value="0"/>
+          <span class="slider-val" id="wmRotationVal">0°</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7 — Export -->
+  <div class="card always-open">
+    <div class="card-header">
+      <div class="card-title"><span class="card-title-num">07</span>Export</div>
+    </div>
+    <div class="card-body">
+      <div class="export-row">
+        <label>Resolution</label>
+        <select id="exportRes" aria-label="Export resolution">
+          <option value="1080">1080 × 1920 (HD)</option>
+          <option value="1440">1440 × 2560 (QHD)</option>
+          <option value="2160">2160 × 3840 (4K)</option>
+        </select>
+      </div>
+      <button class="btn-export" id="downloadBtn" disabled>
+        ⬇ Download PNG
+        <span class="kbd">Ctrl+S</span>
+      </button>
+    </div>
+  </div>
+
+</div><!-- /panel -->
+
+<!-- ══════════════════════════════════════════
+     RIGHT PANEL — PREVIEW
+══════════════════════════════════════════ -->
+<div class="preview-wrap">
+  <div class="preview-header">
+    Live Preview
+    <span id="resLabel">1080 × 1920</span>
+  </div>
+  <div class="canvas-container" id="canvasContainer">
+    <canvas id="previewCanvas" width="1080" height="1920"></canvas>
+    <div class="no-image-msg" id="noImageMsg">
+      <span class="big">📷</span>
+      <span>Upload an image to begin</span>
+    </div>
+    <div class="canvas-spinner" id="canvasSpinner">
+      <div class="spinner-ring"></div>
+    </div>
+    <div class="drag-hint" id="dragHint">Drag to reposition watermark</div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   HADITH IMAGE MAKER  v5
+   Improvements over v4:
+   - Class-based StateManager with undo/redo history (50 steps)
+   - Fully dynamic watermark system (image upload, URL, text, none)
+   - requestAnimationFrame-based render scheduling (no setTimeout)
+   - Cached text wrapping with invalidation on state change
+   - Drag-to-position watermark on preview canvas
+   - Toast notification system
+   - Loading indicators for fonts and images
+   - Keyboard shortcuts (Ctrl+Z/Y/S)
+   - Event delegation for toggle groups
+   - Better memory management (URL.revokeObjectURL)
+   - Accessible markup (ARIA labels, button elements)
+═══════════════════════════════════════════════════════════════════ */
+
+// ═══════════════════════════════════════════
+// STATE MANAGER  (undo/redo history)
+// ═══════════════════════════════════════════
+class StateManager {
+  constructor(initialState) {
+    this._state   = { ...initialState };
+    this._history = [];   // past snapshots
+    this._future  = [];   // redo stack
+    this._maxHistory = 50;
+  }
+
+  get() { return this._state; }
+
+  /** Read a single key */
+  read(key) { return this._state[key]; }
+
+  /**
+   * Update state and push to history.
+   * Pass silent=true to skip history (e.g. live-slider drag preview).
+   */
+  set(patch, silent = false) {
+    if (!silent) {
+      this._history.push({ ...this._state });
+      if (this._history.length > this._maxHistory) this._history.shift();
+      this._future = [];
+    }
+    Object.assign(this._state, patch);
+    updateUndoRedoUI();
+  }
+
+  undo() {
+    if (!this._history.length) return;
+    this._future.push({ ...this._state });
+    this._state = this._history.pop();
+    updateUndoRedoUI();
+    syncUIToState();
+    scheduleRender();
+  }
+
+  redo() {
+    if (!this._future.length) return;
+    this._history.push({ ...this._state });
+    this._state = this._future.pop();
+    updateUndoRedoUI();
+    syncUIToState();
+    scheduleRender();
+  }
+
+  canUndo() { return this._history.length > 0; }
+  canRedo() { return this._future.length > 0; }
+
+  /** Snapshot state for undo BEFORE a continuous gesture starts */
+  checkpoint() {
+    this._history.push({ ...this._state });
+    if (this._history.length > this._maxHistory) this._history.shift();
+    this._future = [];
+    updateUndoRedoUI();
+  }
+}
+
+// ═══════════════════════════════════════════
+// INITIAL STATE
+// ═══════════════════════════════════════════
+const INITIAL_STATE = {
+  // Content
+  image:            null,
+  hadith:           '',
+  translation:      '',
+  urdu:             '',
+  source:           '',
+
+  // Typography
+  arabicSize:       60,
+  transSize:        40,
+  urduSize:         50,
+  sourceSize:       25,
+  engLetterSpacing: 0,
+  engLineHeight:    1.6,
+  arLineHeight:     2.0,
+  urLineHeight:     2.0,
+  transAlign:       'center',
+
+  // Colors
+  textColor:        '#ffffff',
+  accentColor:      '#c8a96e',
+  shadowColor:      '#000000',
+
+  // Overlay
+  overlayMode:      'gradient',
+  overlayOpacity:   0.75,
+  shadowStrength:   0.80,
+
+  // Layout
+  autoLayout:       true,
+  arabicYPct:       6,
+  transYPct:        52,
+  urduYPct:         68,
+  sourceYPct:       84,
+  topMarginPct:     20,
+  botMarginPct:     15,
+  boxPadding:       44,
+  hPadding:         30,
+
+  // Watermark
+  wmMode:           'image',   // 'image' | 'url' | 'text' | 'none'
+  watermarkOpacity: 1.0,
+  wmScale:          0.60,      // fraction of BASE_W
+  wmPosX:           50,        // percentage (0–100) horizontal center
+  wmPosY:           93,        // percentage (0–100) vertical center
+  wmRotation:       0,         // degrees
+  wmTextContent:    '@YourChannel',
+  wmTextColor:      '#ffffff',
+  wmTextSize:       40,
+  wmTextAlign:      'left',
+
+  // Export
+  exportRes:        1080,
+};
+
+const S = new StateManager(INITIAL_STATE);
+
+// ═══════════════════════════════════════════
+// CANVAS SETUP
+// ═══════════════════════════════════════════
+const BASE_W = 1080, BASE_H = 1920;
+const canvas  = document.getElementById('previewCanvas');
+const ctx     = canvas.getContext('2d');
+canvas.width  = BASE_W;
+canvas.height = BASE_H;
+
+// Offscreen context for text measurement (never pollutes live ctx)
+const _measureCanvas = document.createElement('canvas');
+const _measureCtx    = _measureCanvas.getContext('2d');
+
+// ═══════════════════════════════════════════
+// WATERMARK IMAGE STATE
+// ═══════════════════════════════════════════
+let wmImageSrc   = null;  // loaded Image for 'image' mode
+let wmUrlSrc     = null;  // loaded Image for 'url' mode
+let _wmObjectURL = null;  // current object URL (for revocation)
+
+// Pre-load default watermark
+const defaultWmImg = new Image();
+defaultWmImg.crossOrigin = 'anonymous';
+defaultWmImg.onload  = () => { wmImageSrc = defaultWmImg; scheduleRender(); };
+defaultWmImg.onerror = () => {};
+defaultWmImg.src = 'https://i.ibb.co/7qMK13S/watermark.png';
+
+// ═══════════════════════════════════════════
+// TEXT WRAP CACHE
+// ═══════════════════════════════════════════
+const _wrapCache = new Map();
+
+function wrapText(text, maxW, font, dir) {
+  const cacheKey = `${font}|${dir}|${maxW}|${text}`;
+  if (_wrapCache.has(cacheKey)) return _wrapCache.get(cacheKey);
+
+  _measureCtx.font      = font;
+  _measureCtx.direction = dir === 'rtl' ? 'rtl' : 'ltr';
+
+  const words  = text.trim().split(/\s+/).filter(Boolean);
+  const lines  = [];
+  let cur      = '';
+
+  for (const word of words) {
+    const test = cur ? cur + ' ' + word : word;
+    if (_measureCtx.measureText(test).width > maxW && cur) {
+      lines.push(cur);
+      cur = word;
+    } else {
+      cur = test;
+    }
+  }
+  if (cur) lines.push(cur);
+
+  _wrapCache.set(cacheKey, lines);
+  // Limit cache size
+  if (_wrapCache.size > 200) {
+    const firstKey = _wrapCache.keys().next().value;
+    _wrapCache.delete(firstKey);
+  }
+  return lines;
+}
+
+function invalidateWrapCache() { _wrapCache.clear(); }
+
+// ═══════════════════════════════════════════
+// RAF-BASED RENDER SCHEDULING
+// ═══════════════════════════════════════════
+let _rafPending = false;
+
+function scheduleRender() {
+  if (_rafPending) return;
+  _rafPending = true;
+  requestAnimationFrame(() => {
+    _rafPending = false;
+    render();
+  });
+}
+
+// ═══════════════════════════════════════════
+// RENDER PIPELINE
+// ═══════════════════════════════════════════
+
+/** Entry for preview canvas */
+function render() {
+  renderTo(ctx, BASE_W, BASE_H, 1);
+}
+
+/**
+ * Decoupled pipeline — works for both preview and export.
+ * @param {CanvasRenderingContext2D} c
+ * @param {number} W  logical width (before ctx.scale)
+ * @param {number} H  logical height
+ * @param {number} scale  ctx.scale factor already applied by caller
+ */
+function renderTo(c, W, H, scale) {
+  const state = S.get();
+
+  drawBackground(c, W, H, state);
+  drawOverlay(c, W, H, state);
+
+  const pad    = state.hPadding;
+  const maxW   = W - pad * 2;
+  const blocks = computeLayout(W, H, maxW, state);
+
+  if (state.overlayMode === 'box' || state.overlayMode === 'frosted') {
+    drawTextBoxes(c, blocks, pad, W, H, state);
+  }
+
+  blocks.forEach(b => drawTextBlock(c, b, pad, W, state));
+  drawWatermark(c, W, H, state);
+  drawVignette(c, W, H);
+}
+
+// ── drawBackground ──────────────────────────────────────────────
+function drawBackground(c, W, H, state) {
+  c.clearRect(0, 0, W, H);
+  c.fillStyle = '#0a0a0a';
+  c.fillRect(0, 0, W, H);
+  if (!state.image) return;
+
+  const img   = state.image;
+  const imgAR = img.width / img.height;
+  const canAR = W / H;
+  let sx = 0, sy = 0, sw = img.width, sh = img.height;
+
+  if (imgAR > canAR) { sw = img.height * canAR; sx = (img.width  - sw) / 2; }
+  else               { sh = img.width  / canAR; sy = (img.height - sh) / 2; }
+
+  c.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
+}
+
+// ── drawOverlay ─────────────────────────────────────────────────
+function drawOverlay(c, W, H, state) {
+  const a = state.overlayOpacity;
+  if (state.overlayMode === 'gradient') {
+    const tg = c.createLinearGradient(0, 0, 0, H * 0.55);
+    tg.addColorStop(0, `rgba(0,0,0,${a})`);
+    tg.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = tg; c.fillRect(0, 0, W, H * 0.55);
+
+    const bg = c.createLinearGradient(0, H * 0.42, 0, H);
+    bg.addColorStop(0, 'rgba(0,0,0,0)');
+    bg.addColorStop(1, `rgba(0,0,0,${Math.min(a + .1, 1)})`);
+    c.fillStyle = bg; c.fillRect(0, H * 0.42, W, H * 0.58);
+
+  } else if (state.overlayMode === 'solid') {
+    c.fillStyle = `rgba(0,0,0,${a})`;
+    c.fillRect(0, 0, W, H);
+  }
+  // 'frosted' and 'box' handled per-block in drawTextBoxes
+}
+
+// ── computeLayout ────────────────────────────────────────────────
+function computeLayout(W, H, maxW, state) {
+  const blocks = [];
+
+  const arabicFont = `${state.arabicSize}px 'Hafs','Amiri Quran','Amiri',serif`;
+  const transFont  = `${state.transSize}px 'Merriweather',Georgia,serif`;
+  const urduFont   = `${state.urduSize}px 'Gulzar',serif`;
+  const sourceFont = `italic ${state.sourceSize}px 'Merriweather',Georgia,serif`;
+
+  const arLineH  = state.arabicSize * state.arLineHeight;
+  const enLineH  = state.transSize  * state.engLineHeight;
+  const urLineH  = state.urduSize   * state.urLineHeight;
+  const srcLineH = state.sourceSize * 1.5;
+
+  function measure(text, font, lineH, dir) {
+    if (!text || !text.trim()) return { lines: [], height: 0 };
+    const lines  = wrapText(text, maxW, font, dir);
+    return { lines, height: lines.length * lineH };
+  }
+
+  const ar  = measure(state.hadith,      arabicFont, arLineH,  'rtl');
+  const en  = measure(state.translation, transFont,  enLineH,  state.transAlign);
+  const ur  = measure(state.urdu,        urduFont,   urLineH,  'rtl');
+  const src = state.source ? { lines: [state.source], height: srcLineH } : { lines: [], height: 0 };
+
+  if (state.autoLayout) {
+    const content = [];
+    if (ar.lines.length)  content.push({ type:'arabic',  font:arabicFont, lines:ar.lines,  lineH:arLineH,  height:ar.height,  dir:'rtl' });
+    if (en.lines.length)  content.push({ type:'english', font:transFont,  lines:en.lines,  lineH:enLineH,  height:en.height,  dir:state.transAlign });
+    if (ur.lines.length)  content.push({ type:'urdu',    font:urduFont,   lines:ur.lines,  lineH:urLineH,  height:ur.height,  dir:'rtl' });
+    if (src.lines.length) content.push({ type:'source',  font:sourceFont, lines:src.lines, lineH:srcLineH, height:srcLineH,   dir:'ltr' });
+    if (!content.length)  return blocks;
+
+    const topSafe    = H * (state.topMarginPct / 100);
+    const botSafe    = H * (state.botMarginPct / 100);
+    const available  = H - topSafe - botSafe;
+    const totalTextH = content.reduce((s, b) => s + b.height, 0);
+    const N          = content.length;
+    const gap        = Math.max(20, (available - totalTextH) / (N + 1));
+
+    let cursor = topSafe + gap;
+    content.forEach((b, i) => {
+      b.y = cursor;
+      blocks.push(b);
+      if (b.type === 'arabic' && i < N - 1) {
+        blocks.push({ type: 'divider', y: cursor + b.height + gap * 0.38 });
+      }
+      if (b.type === 'source') {
+        blocks.splice(blocks.length - 1, 0, { type: 'divider', y: cursor - gap * 0.38 });
+      }
+      cursor += b.height + gap;
+    });
+
+  } else {
+    if (ar.lines.length)  blocks.push({ type:'arabic',  font:arabicFont,  lines:ar.lines,  y:H*(state.arabicYPct/100),  lineH:arLineH,  dir:'rtl' });
+    if (en.lines.length)  blocks.push({ type:'english', font:transFont,   lines:en.lines,  y:H*(state.transYPct/100),   lineH:enLineH,  dir:state.transAlign });
+    if (ur.lines.length)  blocks.push({ type:'urdu',    font:urduFont,    lines:ur.lines,  y:H*(state.urduYPct/100),    lineH:urLineH,  dir:'rtl' });
+    if (src.lines.length) {
+      blocks.push({ type:'divider', y:H*(state.sourceYPct/100) - 35 });
+      blocks.push({ type:'source',  font:sourceFont, lines:src.lines, y:H*(state.sourceYPct/100), lineH:srcLineH, dir:'ltr' });
+    }
+  }
+
+  return blocks;
+}
+
+// ── drawTextBoxes ────────────────────────────────────────────────
+function drawTextBoxes(c, blocks, pad, W, H, state) {
+  const textBlocks = blocks.filter(b => b.lines && b.lines.length);
+  if (!textBlocks.length) return;
+
+  const bp   = state.boxPadding;
+  const r    = 18;
+  const boxX = pad - bp;
+  const boxW = W - (pad - bp) * 2;
+
+  textBlocks.forEach(b => {
+    const boxY = b.y - bp;
+    const boxH = b.height + bp * 2;
+
+    if (state.overlayMode === 'frosted') {
+      c.save();
+      roundRect(c, boxX, boxY, boxW, boxH, r);
+      c.clip();
+      c.filter = 'blur(22px)';
+      if (state.image) {
+        const img   = state.image;
+        const imgAR = img.width / img.height;
+        const canAR = W / H;
+        let sx=0, sy=0, sw=img.width, sh=img.height;
+        if (imgAR > canAR) { sw = img.height * canAR; sx = (img.width  - sw) / 2; }
+        else               { sh = img.width  / canAR; sy = (img.height - sh) / 2; }
+        c.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
+      }
+      c.filter = 'none';
+      c.fillStyle = `rgba(0,0,0,${state.overlayOpacity * 0.52})`;
+      c.fillRect(boxX, boxY, boxW, boxH);
+      c.restore();
+      roundRect(c, boxX, boxY, boxW, boxH, r);
+      c.strokeStyle = 'rgba(200,169,110,0.30)';
+      c.lineWidth   = 1.5;
+      c.stroke();
+    } else {
+      roundRect(c, boxX, boxY, boxW, boxH, r);
+      c.fillStyle   = `rgba(0,0,0,${state.overlayOpacity * 0.68})`;
+      c.fill();
+      c.strokeStyle = 'rgba(200,169,110,0.30)';
+      c.lineWidth   = 1.5;
+      c.stroke();
+    }
+  });
+}
+
+// ── drawTextBlock ────────────────────────────────────────────────
+function drawTextBlock(c, block, pad, W, state) {
+  if (block.type === 'divider') { drawDivider(c, block.y, W, state); return; }
+  if (!block.lines || !block.lines.length) return;
+
+  const { type, font, lines, y, lineH, dir } = block;
+  const ss = state.shadowStrength;
+
+  c.save();
+  c.font         = font;
+  c.textBaseline = 'top';
+  c.shadowColor   = hexToRgba(state.shadowColor, ss * 0.9);
+  c.shadowBlur    = type === 'arabic' ? 28 : 20;
+  c.shadowOffsetX = 0;
+  c.shadowOffsetY = type === 'arabic' ? 4 : 3;
+
+  if (type === 'source') {
+    c.fillStyle  = state.accentColor;
+    c.textAlign  = 'center';
+    c.shadowBlur = 14;
+    c.fillText('\u2014 ' + lines[0] + ' \u2014', W / 2, y);
+  } else {
+    c.fillStyle = state.textColor;
+
+    if (dir === 'rtl') {
+      c.direction = 'rtl';
+      c.textAlign = 'center';
+      let cy = y;
+      lines.forEach(line => { c.fillText(line, W / 2, cy); cy += lineH; });
+      c.direction = 'ltr';
+    } else {
+      c.letterSpacing = state.engLetterSpacing + 'px';
+      const align = (dir === 'left' || dir === 'right') ? dir : 'center';
+      c.textAlign = align;
+      const xPos  = align === 'left' ? pad : align === 'right' ? W - pad : W / 2;
+      let cy = y;
+      lines.forEach(line => { c.fillText(line, xPos, cy); cy += lineH; });
+      c.letterSpacing = '0px';
+    }
+  }
+  c.restore();
+}
+
+// ── drawWatermark ────────────────────────────────────────────────
+function drawWatermark(c, W, H, state) {
+  if (state.wmMode === 'none') return;
+
+  const opacity = state.watermarkOpacity;
+  const posXpx  = W * (state.wmPosX / 100);
+  const posYpx  = H * (state.wmPosY / 100);
+  const rot     = (state.wmRotation * Math.PI) / 180;
+
+  c.save();
+  c.globalAlpha = opacity;
+  c.translate(posXpx, posYpx);
+  if (rot !== 0) c.rotate(rot);
+
+  if (state.wmMode === 'text') {
+    // Text watermark
+    const fontSize = state.wmTextSize;
+    c.font      = `${fontSize}px 'Merriweather',Georgia,serif`;
+    c.fillStyle = state.wmTextColor;
+    c.shadowColor   = 'rgba(0,0,0,0.6)';
+    c.shadowBlur    = 12;
+    c.shadowOffsetY = 2;
+
+    const align = state.wmTextAlign;
+    c.textAlign    = align;
+    c.textBaseline = 'middle';
+
+    const xOff = align === 'left' ? 0 : align === 'right' ? 0 : 0;
+    c.fillText(state.wmTextContent, xOff, 0);
+
+  } else {
+    // Image watermark
+    const img = state.wmMode === 'image' ? wmImageSrc : wmUrlSrc;
+    if (!img || !img.complete || img.naturalWidth === 0) { c.restore(); return; }
+
+    const scaledW = W * (state.wmScale / 100);
+    const ratio   = img.naturalHeight / img.naturalWidth;
+    const scaledH = scaledW * ratio;
+
+    c.drawImage(img, -scaledW / 2, -scaledH / 2, scaledW, scaledH);
+  }
+
+  c.restore();
+}
+
+// ── drawVignette ─────────────────────────────────────────────────
+function drawVignette(c, W, H) {
+  const v = c.createRadialGradient(W/2, H/2, H*0.25, W/2, H/2, H*0.85);
+  v.addColorStop(0, 'rgba(0,0,0,0)');
+  v.addColorStop(1, 'rgba(0,0,0,0.22)');
+  c.fillStyle = v;
+  c.fillRect(0, 0, W, H);
+}
+
+// ── drawDivider ──────────────────────────────────────────────────
+function drawDivider(c, y, W, state) {
+  const inset = state.hPadding;
+  const x0    = inset;
+  const x1    = W - inset;
+
+  const g = c.createLinearGradient(x0, y, x1, y);
+  g.addColorStop(0,   'rgba(200,169,110,0)');
+  g.addColorStop(0.5, state.accentColor);
+  g.addColorStop(1,   'rgba(200,169,110,0)');
+  c.strokeStyle = g;
+  c.lineWidth   = 1.5;
+  c.beginPath();
+  c.moveTo(x0, y); c.lineTo(x1, y);
+  c.stroke();
+}
+
+// ═══════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════
+function downloadImage() {
+  const state   = S.get();
+  const exportW = state.exportRes;
+  const exportH = Math.round(exportW * (BASE_H / BASE_W));
+  const scale   = exportW / BASE_W;
+
+  const hc    = document.createElement('canvas');
+  hc.width    = exportW;
+  hc.height   = exportH;
+  const hx    = hc.getContext('2d');
+
+  hx.scale(scale, scale);
+  renderTo(hx, BASE_W, BASE_H, scale);
+  hx.setTransform(1, 0, 0, 1, 0, 0);
+
+  const link    = document.createElement('a');
+  link.download = `hadith-${exportW}x${exportH}-${Date.now()}.png`;
+  link.href     = hc.toDataURL('image/png');
+  link.click();
+
+  showToast('Image downloaded!', 'success');
+}
+
+// ═══════════════════════════════════════════
+// IMAGE UPLOAD — BACKGROUND
+// ═══════════════════════════════════════════
+let _currentObjectURL = null;
+
+function loadBackgroundFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+
+  if (_currentObjectURL) { URL.revokeObjectURL(_currentObjectURL); _currentObjectURL = null; }
+
+  showSpinner(true);
+  const objURL = URL.createObjectURL(file);
+  _currentObjectURL = objURL;
+
+  const img = new Image();
+  img.onload = () => {
+    S.set({ image: img });
+    document.getElementById('noImageMsg').style.display = 'none';
+    document.getElementById('downloadBtn').disabled = false;
+    const preview = document.getElementById('bgPreview');
+    preview.src = objURL;
+    preview.classList.add('visible');
+    showSpinner(false);
+    scheduleRender();
+  };
+  img.onerror = () => {
+    URL.revokeObjectURL(objURL); _currentObjectURL = null;
+    showSpinner(false);
+    showToast('Failed to load image', 'error');
+  };
+  img.src = objURL;
+}
+
+// ═══════════════════════════════════════════
+// WATERMARK UPLOAD — IMAGE MODE
+// ═══════════════════════════════════════════
+let _wmObjectURL = null;
+
+function loadWatermarkFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  if (_wmObjectURL) { URL.revokeObjectURL(_wmObjectURL); _wmObjectURL = null; }
+
+  const objURL = URL.createObjectURL(file);
+  _wmObjectURL  = objURL;
+
+  const img = new Image();
+  img.onload = () => {
+    wmImageSrc = img;
+    const previewImg = document.getElementById('wmPreviewImg');
+    previewImg.src = objURL;
+    previewImg.style.display = 'block';
+    document.getElementById('wmPreviewPlaceholder').style.display = 'none';
+    scheduleRender();
+    showToast('Watermark image loaded', 'success');
+  };
+  img.onerror = () => {
+    URL.revokeObjectURL(objURL); _wmObjectURL = null;
+    showToast('Failed to load watermark image', 'error');
+  };
+  img.src = objURL;
+}
+
+// ── URL watermark loader ────────────────────────────────────────
+function loadWatermarkURL() {
+  const url   = document.getElementById('wmUrlInput').value.trim();
+  const errEl = document.getElementById('wmUrlError');
+  errEl.classList.remove('visible');
+
+  if (!url) return;
+
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+
+  img.onload = () => {
+    wmUrlSrc = img;
+    const previewImg = document.getElementById('wmUrlPreviewImg');
+    previewImg.src = url;
+    previewImg.style.display = 'block';
+    document.getElementById('wmUrlPreviewPlaceholder').style.display = 'none';
+    scheduleRender();
+    showToast('Watermark URL loaded', 'success');
+  };
+  img.onerror = () => {
+    wmUrlSrc = null;
+    errEl.classList.add('visible');
+    showToast('Failed to load URL image', 'error');
+  };
+
+  img.src = url;
+}
+
+// ═══════════════════════════════════════════
+// DRAG-TO-REPOSITION WATERMARK ON CANVAS
+// ═══════════════════════════════════════════
+(function initWatermarkDrag() {
+  let isDragging = false;
+  const cc       = document.getElementById('canvasContainer');
+  const dragHint = document.getElementById('dragHint');
+
+  function getRelPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const cx   = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const cy   = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    return {
+      xPct: Math.max(0, Math.min(100, (cx / rect.width)  * 100)),
+      yPct: Math.max(0, Math.min(100, (cy / rect.height) * 100)),
+    };
+  }
+
+  function isNearWatermark(e) {
+    const state  = S.get();
+    const { xPct, yPct } = getRelPos(e);
+    const dX = Math.abs(xPct - state.wmPosX);
+    const dY = Math.abs(yPct - state.wmPosY);
+    return dX < 12 && dY < 5;
+  }
+
+  function onStart(e) {
+    if (S.get().wmMode === 'none') return;
+    if (!isNearWatermark(e)) return;
+    isDragging = true;
+    S.checkpoint();
+    e.preventDefault();
+  }
+  function onMove(e) {
+    if (!isDragging) {
+      if (S.get().wmMode !== 'none' && isNearWatermark(e)) {
+        cc.style.cursor = 'grab';
+        dragHint.classList.add('visible');
+      } else {
+        cc.style.cursor = '';
+        dragHint.classList.remove('visible');
+      }
+      return;
+    }
+    const { xPct, yPct } = getRelPos(e);
+    S.set({ wmPosX: Math.round(xPct * 10)/10, wmPosY: Math.round(yPct * 10)/10 }, true);
+    syncSliderUI('wmPosX', xPct, 'wmPosXVal', v => Math.round(v) + '%');
+    syncSliderUI('wmPosY', yPct, 'wmPosYVal', v => Math.round(v) + '%');
+    scheduleRender();
+    e.preventDefault();
+  }
+  function onEnd() {
+    if (isDragging) { isDragging = false; cc.style.cursor = ''; }
+  }
+
+  canvas.addEventListener('mousedown',  onStart);
+  canvas.addEventListener('mousemove',  onMove);
+  window.addEventListener('mouseup',    onEnd);
+  canvas.addEventListener('touchstart', onStart, { passive: false });
+  canvas.addEventListener('touchmove',  onMove,  { passive: false });
+  window.addEventListener('touchend',   onEnd);
+})();
+
+function syncSliderUI(id, val, labelId, fmt) {
+  const el = document.getElementById(id);
+  if (el) el.value = val;
+  const lEl = document.getElementById(labelId);
+  if (lEl) lEl.textContent = fmt(val);
+}
+
+// ═══════════════════════════════════════════
+// UI EVENT BINDINGS
+// ═══════════════════════════════════════════
+
+// ── Accordion cards ────────────────────────
+function toggleCard(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+// ── Background image upload ────────────────
+const uploadZone = document.getElementById('uploadZone');
+document.getElementById('imageUpload').addEventListener('change', e => loadBackgroundFile(e.target.files[0]));
+uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) loadBackgroundFile(e.dataTransfer.files[0]);
+});
+
+// ── Watermark image upload ─────────────────
+const wmUploadZone = document.getElementById('wmUploadZone');
+document.getElementById('wmImageUpload').addEventListener('change', e => loadWatermarkFile(e.target.files[0]));
+wmUploadZone.addEventListener('dragover',  e => { e.preventDefault(); wmUploadZone.classList.add('drag-over'); });
+wmUploadZone.addEventListener('dragleave', () => wmUploadZone.classList.remove('drag-over'));
+wmUploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  wmUploadZone.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) loadWatermarkFile(e.dataTransfer.files[0]);
+});
+
+// ── Watermark URL load button ──────────────
+document.getElementById('wmUrlLoadBtn').addEventListener('click', loadWatermarkURL);
+document.getElementById('wmUrlInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') loadWatermarkURL();
+});
+
+// ── Watermark mode tabs (event delegation) ─
+document.getElementById('wmModeTabs').addEventListener('click', e => {
+  const tab = e.target.closest('.wm-tab');
+  if (!tab) return;
+  const mode = tab.dataset.wm;
+
+  document.querySelectorAll('.wm-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+
+  document.querySelectorAll('.wm-panel').forEach(p => p.classList.remove('visible'));
+  document.getElementById(`wm-panel-${mode}`).classList.add('visible');
+
+  document.getElementById('wmSharedControls').style.display = mode === 'none' ? 'none' : 'block';
+
+  S.set({ wmMode: mode });
+  scheduleRender();
+});
+
+// ── Watermark text align (event delegation) ─
+document.getElementById('wmTextAlignGroup').addEventListener('click', e => {
+  const btn = e.target.closest('[data-wm-align]');
+  if (!btn) return;
+  document.querySelectorAll('[data-wm-align]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  S.set({ wmTextAlign: btn.dataset.wmAlign });
+  scheduleRender();
+});
+
+// ── Overlay mode (event delegation) ────────
+document.getElementById('overlayModeGroup').addEventListener('click', e => {
+  const btn = e.target.closest('[data-mode]');
+  if (!btn) return;
+  document.querySelectorAll('#overlayModeGroup [data-mode]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  S.set({ overlayMode: btn.dataset.mode });
+  scheduleRender();
+});
+
+// ── Text alignment (event delegation) ──────
+document.querySelector('.align-group').addEventListener('click', e => {
+  const btn = e.target.closest('[data-align]');
+  if (!btn) return;
+  document.querySelectorAll('[data-align]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  invalidateWrapCache();
+  S.set({ transAlign: btn.dataset.align });
+  scheduleRender();
+});
+
+// ── Text inputs ─────────────────────────────
+const TEXT_INPUT_MAP = {
+  hadithText:      'hadith',
+  translationText: 'translation',
+  urduText:        'urdu',
+  sourceText:      'source',
+};
+Object.entries(TEXT_INPUT_MAP).forEach(([id, key]) => {
+  document.getElementById(id).addEventListener('input', e => {
+    invalidateWrapCache();
+    S.set({ [key]: e.target.value });
+    scheduleRender();
+  });
+});
+
+// ── Color pickers ───────────────────────────
+['textColor','accentColor','shadowColor'].forEach(id => {
+  document.getElementById(id).addEventListener('input', e => {
+    S.set({ [id]: e.target.value });
+    scheduleRender();
+  });
+});
+
+// ── Watermark text color ────────────────────
+document.getElementById('wmTextColor').addEventListener('input', e => {
+  S.set({ wmTextColor: e.target.value });
+  scheduleRender();
+});
+
+// ── Watermark text input ────────────────────
+document.getElementById('wmTextInput').addEventListener('input', e => {
+  S.set({ wmTextContent: e.target.value });
+  scheduleRender();
+});
+
+// ── Auto-layout toggle ──────────────────────
+document.getElementById('autoLayout').addEventListener('change', e => {
+  S.set({ autoLayout: e.target.checked });
+  document.getElementById('manualYControls').style.display    = e.target.checked ? 'none'  : 'block';
+  document.getElementById('autoLayoutControls').style.display = e.target.checked ? 'block' : 'none';
+  document.getElementById('autoLayoutNote').textContent = e.target.checked
+    ? 'Elements stack automatically with even spacing. Disable for manual Y control.'
+    : 'Manual mode: adjust sliders to position each element.';
+  scheduleRender();
+});
+
+// ── Export resolution ───────────────────────
+document.getElementById('exportRes').addEventListener('change', e => {
+  const res = parseInt(e.target.value);
+  S.set({ exportRes: res });
+  document.getElementById('resLabel').textContent = `${res} × ${(res / 9 * 16) | 0}`;
+});
+
+// ── Download button ─────────────────────────
+document.getElementById('downloadBtn').addEventListener('click', downloadImage);
+
+// ═══════════════════════════════════════════
+// SLIDERS — consolidated binding
+// ═══════════════════════════════════════════
+const SLIDERS = [
+  // [elementId, stateKey, labelId, formatter, divisor]
+  ['arabicSize',        'arabicSize',       'arabicSizeVal',       v => v,       null, true],
+  ['transSize',         'transSize',        'transSizeVal',        v => v,       null, true],
+  ['urduSize',          'urduSize',         'urduSizeVal',         v => v,       null, true],
+  ['sourceSize',        'sourceSize',       'sourceSizeVal',       v => v,       null, true],
+  ['engLetterSpacing',  'engLetterSpacing', 'engLetterSpacingVal', v => v],
+  ['engLineHeight',     'engLineHeight',    'engLineHeightVal',    v => v],
+  ['arLineHeight',      'arLineHeight',     'arLineHeightVal',     v => v,       null, true],
+  ['urLineHeight',      'urLineHeight',     'urLineHeightVal',     v => v,       null, true],
+  ['overlayOpacity',    'overlayOpacity',   'overlayOpacityVal',   v => v+'%',   100],
+  ['shadowStrength',    'shadowStrength',   'shadowStrengthVal',   v => v+'%',   100],
+  ['arabicY',           'arabicYPct',       'arabicYVal',          v => v+'%'],
+  ['transY',            'transYPct',        'transYVal',           v => v+'%'],
+  ['urduY',             'urduYPct',         'urduYVal',            v => v+'%'],
+  ['sourceY',           'sourceYPct',       'sourceYVal',          v => v+'%'],
+  ['topMargin',         'topMarginPct',     'topMarginVal',        v => v+'%'],
+  ['botMargin',         'botMarginPct',     'botMarginVal',        v => v+'%'],
+  ['boxPadding',        'boxPadding',       'boxPaddingVal',       v => v+'px',  null, true],
+  ['hPadding',          'hPadding',         'hPaddingVal',         v => v+'px',  null, true],
+  ['watermarkOpacity',  'watermarkOpacity', 'watermarkOpacityVal', v => v+'%',   100],
+  ['wmScale',           'wmScale',          'wmScaleVal',          v => v+'%'],
+  ['wmPosX',            'wmPosX',           'wmPosXVal',           v => v+'%'],
+  ['wmPosY',            'wmPosY',           'wmPosYVal',           v => v+'%'],
+  ['wmRotation',        'wmRotation',       'wmRotationVal',       v => v+'°'],
+  ['wmTextSize',        'wmTextSize',       'wmTextSizeVal',       v => v],
+];
+
+SLIDERS.forEach(([id, key, labelId, fmt, div, invalidatesWrap]) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  let checkpointDone = false;
+  el.addEventListener('mousedown', () => { checkpointDone = false; });
+
+  el.addEventListener('input', e => {
+    if (!checkpointDone) { S.checkpoint(); checkpointDone = true; }
+    const raw = parseFloat(e.target.value);
+    const val = div ? raw / div : raw;
+    if (invalidatesWrap) invalidateWrapCache();
+    S.set({ [key]: val }, true);  // silent (checkpoint already done)
+    document.getElementById(labelId).textContent = fmt(raw);
+    updateSliderBackground(el);
+    scheduleRender();
+  });
+  el.addEventListener('change', () => { checkpointDone = false; });
+
+  updateSliderBackground(el);
+});
+
+function updateSliderBackground(el) {
+  const min = parseFloat(el.min) || 0;
+  const max = parseFloat(el.max) || 100;
+  const val = parseFloat(el.value) || 0;
+  const pct = ((val - min) / (max - min)) * 100;
+  el.style.setProperty('--val', pct + '%');
+}
+
+// Initialize all slider backgrounds
+document.querySelectorAll('input[type="range"]').forEach(updateSliderBackground);
+
+// ═══════════════════════════════════════════
+// STYLE PRESETS
+// ═══════════════════════════════════════════
+const PRESETS = {
+  classic: {
+    textColor:'#ffffff', accentColor:'#c8a96e', shadowColor:'#000000',
+    overlayMode:'gradient', overlayOpacity:.75,
+    arabicSize:46, transSize:28, urduSize:30, sourceSize:20,
+    arLineHeight:2.0, urLineHeight:2.6, engLineHeight:1.6, engLetterSpacing:0,
+  },
+  minimal: {
+    textColor:'#f5f0e8', accentColor:'#d4b896', shadowColor:'#000000',
+    overlayMode:'none', overlayOpacity:.0,
+    arabicSize:40, transSize:24, urduSize:26, sourceSize:18,
+    arLineHeight:1.9, urLineHeight:2.4, engLineHeight:1.5, engLetterSpacing:1,
+  },
+  bold: {
+    textColor:'#ffffff', accentColor:'#ffdd88', shadowColor:'#000000',
+    overlayMode:'solid', overlayOpacity:.6,
+    arabicSize:56, transSize:32, urduSize:36, sourceSize:22,
+    arLineHeight:2.1, urLineHeight:2.8, engLineHeight:1.7, engLetterSpacing:0.5,
+  },
+  dark: {
+    textColor:'#e8d5a0', accentColor:'#a07840', shadowColor:'#000000',
+    overlayMode:'solid', overlayOpacity:.85,
+    arabicSize:44, transSize:26, urduSize:28, sourceSize:19,
+    arLineHeight:2.0, urLineHeight:2.5, engLineHeight:1.6, engLetterSpacing:0,
+  },
+};
+
+function applyPreset(name) {
+  const p = PRESETS[name];
+  if (!p) return;
+  invalidateWrapCache();
+  S.set(p);
+
+  // Sync color inputs
+  ['textColor','accentColor','shadowColor'].forEach(k => {
+    const el = document.getElementById(k);
+    if (el && p[k]) el.value = p[k];
+  });
+
+  // Sync overlay opacity
+  const ooEl = document.getElementById('overlayOpacity');
+  if (ooEl) { ooEl.value = Math.round(p.overlayOpacity * 100); updateSliderBackground(ooEl); }
+  document.getElementById('overlayOpacityVal').textContent = Math.round(p.overlayOpacity * 100) + '%';
+
+  // Sync overlay mode buttons
+  document.querySelectorAll('#overlayModeGroup [data-mode]').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === p.overlayMode)
+  );
+
+  // Sync size/line-height sliders
+  const sliderMap = {
+    arabicSize: 'arabicSize', transSize: 'transSize',
+    urduSize: 'urduSize', sourceSize: 'sourceSize',
+    arLineHeight: 'arLineHeight', urLineHeight: 'urLineHeight',
+    engLineHeight: 'engLineHeight', engLetterSpacing: 'engLetterSpacing',
+  };
+  Object.entries(sliderMap).forEach(([stateKey, elId]) => {
+    if (p[stateKey] === undefined) return;
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.value = p[stateKey];
+    updateSliderBackground(el);
+    const valEl = document.getElementById(elId + 'Val');
+    if (valEl) valEl.textContent = p[stateKey];
+  });
+
+  scheduleRender();
+  showToast(`Preset "${name}" applied`, 'success');
+}
+
+// ═══════════════════════════════════════════
+// SYNC UI TO STATE (for undo/redo)
+// ═══════════════════════════════════════════
+function syncUIToState() {
+  const state = S.get();
+
+  // Colors
+  ['textColor','accentColor','shadowColor'].forEach(k => {
+    const el = document.getElementById(k);
+    if (el) el.value = state[k];
+  });
+
+  // Sliders
+  SLIDERS.forEach(([id, key, labelId, fmt, div]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const raw = div ? state[key] * div : state[key];
+    el.value = raw;
+    updateSliderBackground(el);
+    const lEl = document.getElementById(labelId);
+    if (lEl) lEl.textContent = fmt(raw);
+  });
+
+  // Overlay mode
+  document.querySelectorAll('#overlayModeGroup [data-mode]').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === state.overlayMode)
+  );
+
+  // Text align
+  document.querySelectorAll('[data-align]').forEach(b =>
+    b.classList.toggle('active', b.dataset.align === state.transAlign)
+  );
+
+  // Auto-layout
+  document.getElementById('autoLayout').checked = state.autoLayout;
+  document.getElementById('manualYControls').style.display    = state.autoLayout ? 'none'  : 'block';
+  document.getElementById('autoLayoutControls').style.display = state.autoLayout ? 'block' : 'none';
+
+  // Watermark mode tabs
+  document.querySelectorAll('.wm-tab').forEach(t => t.classList.toggle('active', t.dataset.wm === state.wmMode));
+  document.querySelectorAll('.wm-panel').forEach(p => p.classList.remove('visible'));
+  const activePanel = document.getElementById(`wm-panel-${state.wmMode}`);
+  if (activePanel) activePanel.classList.add('visible');
+  document.getElementById('wmSharedControls').style.display = state.wmMode === 'none' ? 'none' : 'block';
+}
+
+// ═══════════════════════════════════════════
+// UNDO / REDO
+// ═══════════════════════════════════════════
+function updateUndoRedoUI() {
+  document.getElementById('undoBtn').disabled = !S.canUndo();
+  document.getElementById('redoBtn').disabled = !S.canRedo();
+}
+
+document.getElementById('undoBtn').addEventListener('click', () => S.undo());
+document.getElementById('redoBtn').addEventListener('click', () => S.redo());
+
+// ═══════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  const tag = document.activeElement.tagName;
+  if (tag === 'TEXTAREA' || tag === 'INPUT') return;  // skip when typing
+
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === 'z') { e.preventDefault(); S.undo(); }
+    if (e.key === 'y') { e.preventDefault(); S.redo(); }
+    if (e.key === 's') { e.preventDefault(); if (!document.getElementById('downloadBtn').disabled) downloadImage(); }
+  }
+});
+
+// ═══════════════════════════════════════════
+// TOAST NOTIFICATIONS
+// ═══════════════════════════════════════════
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast     = document.createElement('div');
+  const icon      = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span class="toast-icon">${icon}</span><span>${message}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// ═══════════════════════════════════════════
+// SPINNER
+// ═══════════════════════════════════════════
+function showSpinner(visible) {
+  document.getElementById('canvasSpinner').classList.toggle('visible', visible);
+}
+
+// ═══════════════════════════════════════════
+// UTILITY FUNCTIONS
+// ═══════════════════════════════════════════
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1,3), 16);
+  const g = parseInt(hex.slice(3,5), 16);
+  const b = parseInt(hex.slice(5,7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function roundRect(c, x, y, w, h, r) {
+  if (c.roundRect) {
+    c.beginPath();
+    c.roundRect(x, y, w, h, r);
+  } else {
+    c.beginPath();
+    c.moveTo(x+r, y);
+    c.lineTo(x+w-r, y);
+    c.quadraticCurveTo(x+w, y, x+w, y+r);
+    c.lineTo(x+w, y+h-r);
+    c.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+    c.lineTo(x+r, y+h);
+    c.quadraticCurveTo(x, y+h, x, y+h-r);
+    c.lineTo(x, y+r);
+    c.quadraticCurveTo(x, y, x+r, y);
+    c.closePath();
+  }
+}
+
+// ═══════════════════════════════════════════
+// FONT LOADING PROGRESS
+// ═══════════════════════════════════════════
+(function initFontLoading() {
+  const bar = document.getElementById('loadingBar');
+  bar.style.width = '30%';
+  bar.style.opacity = '1';
+
+  document.fonts.ready.then(() => {
+    bar.style.width = '100%';
+    setTimeout(() => { bar.style.opacity = '0'; }, 400);
+    scheduleRender();
+  });
+})();
+
+// ═══════════════════════════════════════════
+// INITIAL RENDER
+// ═══════════════════════════════════════════
+updateUndoRedoUI();
+scheduleRender();
+</script>
+</body>
+</html>
