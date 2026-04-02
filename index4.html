@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Islamic Story Maker v5</title>
+<title>Islamic Story Maker/title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -1610,7 +1610,7 @@ function loadBackgroundFile(file) {
 // ═══════════════════════════════════════════
 // WATERMARK UPLOAD — IMAGE MODE
 // ═══════════════════════════════════════════
-let _wmObjectURL = null;
+// Removed duplicate _wmObjectURL declaration
 
 function loadWatermarkFile(file) {
   if (!file || !file.type.startsWith('image/')) return;
@@ -1748,7 +1748,7 @@ function toggleCard(id) {
 const uploadZone = document.getElementById('uploadZone');
 document.getElementById('imageUpload').addEventListener('change', e => loadBackgroundFile(e.target.files[0]));
 uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
 uploadZone.addEventListener('drop', e => {
   e.preventDefault();
   uploadZone.classList.remove('drag-over');
@@ -1759,7 +1759,7 @@ uploadZone.addEventListener('drop', e => {
 const wmUploadZone = document.getElementById('wmUploadZone');
 document.getElementById('wmImageUpload').addEventListener('change', e => loadWatermarkFile(e.target.files[0]));
 wmUploadZone.addEventListener('dragover',  e => { e.preventDefault(); wmUploadZone.classList.add('drag-over'); });
-wmUploadZone.addEventListener('dragleave', () => wmUploadZone.classList.remove('drag-over'); });
+wmUploadZone.addEventListener('dragleave', () => wmUploadZone.classList.remove('drag-over'));
 wmUploadZone.addEventListener('drop', e => {
   e.preventDefault();
   wmUploadZone.classList.remove('drag-over');
