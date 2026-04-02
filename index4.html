@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Hadith Image Maker v5</title>
+<title>Islamic Story Maker v5</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -266,7 +266,7 @@ textarea:focus, input[type="text"]:focus, input[type="url"]:focus, select:focus 
   box-shadow: 0 0 0 3px rgba(200,169,110,.1);
 }
 
-#hadithText {
+#storyText {
   font-family: 'Hafs','Amiri Quran','Amiri',serif;
   font-size: 1.22rem; direction: rtl; text-align: right;
   min-height: 80px; line-height: 2.1;
@@ -669,14 +669,12 @@ input[type="color"]:hover { border-color: var(--accent); }
 </head>
 <body>
 
-<!-- Loading bar -->
 <div class="loading-bar" id="loadingBar"></div>
 
-<!-- Toast container -->
 <div class="toast-container" id="toastContainer"></div>
 
 <header>
-  <h1>Hadith Image Maker</h1>
+  <h1>Islamic Story Maker</h1>
   <p>Upload · Compose · Export — fully client-side &amp; offline-capable</p>
   <div class="undo-redo">
     <button id="undoBtn" title="Undo (Ctrl+Z)" disabled>↩</button>
@@ -686,12 +684,8 @@ input[type="color"]:hover { border-color: var(--accent); }
 
 <div class="app">
 
-<!-- ══════════════════════════════════════════
-     LEFT PANEL — CONTROLS
-══════════════════════════════════════════ -->
 <div class="panel">
 
-  <!-- 1 — Background Image -->
   <div class="card always-open">
     <div class="card-header">
       <div class="card-title">
@@ -710,7 +704,6 @@ input[type="color"]:hover { border-color: var(--accent); }
     </div>
   </div>
 
-  <!-- 2 — Text Content -->
   <div class="card open" id="card-text">
     <div class="card-header" onclick="toggleCard('card-text')">
       <div class="card-title"><span class="card-title-num">02</span>Text Content</div>
@@ -718,8 +711,8 @@ input[type="color"]:hover { border-color: var(--accent); }
     </div>
     <div class="card-body">
       <div class="field">
-        <label>Hadith <span class="badge">Hafs</span></label>
-        <textarea id="hadithText" placeholder="اكتب الحديث هنا..." rows="4" aria-label="Hadith text in Arabic"></textarea>
+        <label>Islamic Story <span class="badge">Hafs</span></label>
+        <textarea id="storyText" placeholder="اكتب القصة هنا..." rows="4" aria-label="Islamic Story text in Arabic"></textarea>
       </div>
       <div class="field">
         <label>English Translation <span class="badge">Merriweather</span></label>
@@ -731,12 +724,11 @@ input[type="color"]:hover { border-color: var(--accent); }
       </div>
       <div class="field">
         <label>Source Reference</label>
-        <input type="text" id="sourceText" placeholder="e.g. Sahih al-Bukhari 6412"/>
+        <input type="text" id="sourceText" placeholder="e.g. Stories of the Prophets"/>
       </div>
     </div>
   </div>
 
-  <!-- 3 — Typography & Style -->
   <div class="card" id="card-typo">
     <div class="card-header" onclick="toggleCard('card-typo')">
       <div class="card-title"><span class="card-title-num">03</span>Typography &amp; Style</div>
@@ -810,7 +802,6 @@ input[type="color"]:hover { border-color: var(--accent); }
     </div>
   </div>
 
-  <!-- 4 — Background & Overlay -->
   <div class="card" id="card-overlay">
     <div class="card-header" onclick="toggleCard('card-overlay')">
       <div class="card-title"><span class="card-title-num">04</span>Background &amp; Overlay</div>
@@ -841,7 +832,6 @@ input[type="color"]:hover { border-color: var(--accent); }
     </div>
   </div>
 
-  <!-- 5 — Layout & Position -->
   <div class="card" id="card-layout">
     <div class="card-header" onclick="toggleCard('card-layout')">
       <div class="card-title"><span class="card-title-num">05</span>Layout &amp; Position</div>
@@ -906,14 +896,12 @@ input[type="color"]:hover { border-color: var(--accent); }
     </div>
   </div>
 
-  <!-- 6 — Watermark (DYNAMIC) -->
   <div class="card" id="card-watermark">
     <div class="card-header" onclick="toggleCard('card-watermark')">
       <div class="card-title"><span class="card-title-num">06</span>Watermark</div>
       <span class="card-chevron" aria-hidden="true">▾</span>
     </div>
     <div class="card-body">
-      <!-- Mode tabs -->
       <div class="wm-mode-tabs" id="wmModeTabs">
         <button class="wm-tab active" data-wm="image">📁 Image</button>
         <button class="wm-tab" data-wm="url">🌐 URL</button>
@@ -921,7 +909,6 @@ input[type="color"]:hover { border-color: var(--accent); }
         <button class="wm-tab" data-wm="none">🚫 None</button>
       </div>
 
-      <!-- Image upload panel -->
       <div class="wm-panel visible" id="wm-panel-image">
         <div class="wm-preview-box" id="wmPreviewBox">
           <span id="wmPreviewPlaceholder" style="color:var(--muted);font-size:.72rem;">No image selected</span>
@@ -934,7 +921,6 @@ input[type="color"]:hover { border-color: var(--accent); }
         </div>
       </div>
 
-      <!-- URL panel -->
       <div class="wm-panel" id="wm-panel-url">
         <div class="wm-preview-box">
           <img id="wmUrlPreviewImg" style="display:none;max-width:100%;max-height:80px;object-fit:contain;" alt="Watermark URL preview"/>
@@ -947,7 +933,6 @@ input[type="color"]:hover { border-color: var(--accent); }
         <div class="wm-error" id="wmUrlError">⚠ Failed to load image. Check URL or CORS policy.</div>
       </div>
 
-      <!-- Text panel -->
       <div class="wm-panel" id="wm-panel-text">
         <div class="field" style="margin-bottom:.7rem">
           <label>Watermark Text</label>
@@ -972,13 +957,11 @@ input[type="color"]:hover { border-color: var(--accent); }
         </div>
       </div>
 
-      <!-- None panel -->
       <div class="wm-panel" id="wm-panel-none">
         <p class="section-note" style="margin:0;">Watermark is disabled. No logo or text will appear on the exported image.</p>
       </div>
 
       <hr class="card-sep"/>
-      <!-- Shared controls for image/url/text modes -->
       <div id="wmSharedControls">
         <div class="slider-row">
           <label>Opacity</label>
@@ -1009,7 +992,6 @@ input[type="color"]:hover { border-color: var(--accent); }
     </div>
   </div>
 
-  <!-- 7 — Export -->
   <div class="card always-open">
     <div class="card-header">
       <div class="card-title"><span class="card-title-num">07</span>Export</div>
@@ -1030,12 +1012,7 @@ input[type="color"]:hover { border-color: var(--accent); }
     </div>
   </div>
 
-</div><!-- /panel -->
-
-<!-- ══════════════════════════════════════════
-     RIGHT PANEL — PREVIEW
-══════════════════════════════════════════ -->
-<div class="preview-wrap">
+</div><div class="preview-wrap">
   <div class="preview-header">
     Live Preview
     <span id="resLabel">1080 × 1920</span>
@@ -1053,11 +1030,9 @@ input[type="color"]:hover { border-color: var(--accent); }
   </div>
 </div>
 
-</div><!-- /app -->
-
-<script>
+</div><script>
 /* ═══════════════════════════════════════════════════════════════════
-   HADITH IMAGE MAKER  v5
+   ISLAMIC STORY MAKER v5
    Improvements over v4:
    - Class-based StateManager with undo/redo history (50 steps)
    - Fully dynamic watermark system (image upload, URL, text, none)
@@ -1138,7 +1113,7 @@ class StateManager {
 const INITIAL_STATE = {
   // Content
   image:            null,
-  hadith:           '',
+  story:            '',
   translation:      '',
   urdu:             '',
   source:           '',
@@ -1366,7 +1341,7 @@ function computeLayout(W, H, maxW, state) {
     return { lines, height: lines.length * lineH };
   }
 
-  const ar  = measure(state.hadith,      arabicFont, arLineH,  'rtl');
+  const ar  = measure(state.story,       arabicFont, arLineH,  'rtl');
   const en  = measure(state.translation, transFont,  enLineH,  state.transAlign);
   const ur  = measure(state.urdu,        urduFont,   urLineH,  'rtl');
   const src = state.source ? { lines: [state.source], height: srcLineH } : { lines: [], height: 0 };
@@ -1592,7 +1567,7 @@ function downloadImage() {
   hx.setTransform(1, 0, 0, 1, 0, 0);
 
   const link    = document.createElement('a');
-  link.download = `hadith-${exportW}x${exportH}-${Date.now()}.png`;
+  link.download = `story-${exportW}x${exportH}-${Date.now()}.png`;
   link.href     = hc.toDataURL('image/png');
   link.click();
 
@@ -1773,7 +1748,7 @@ function toggleCard(id) {
 const uploadZone = document.getElementById('uploadZone');
 document.getElementById('imageUpload').addEventListener('change', e => loadBackgroundFile(e.target.files[0]));
 uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'); });
 uploadZone.addEventListener('drop', e => {
   e.preventDefault();
   uploadZone.classList.remove('drag-over');
@@ -1784,7 +1759,7 @@ uploadZone.addEventListener('drop', e => {
 const wmUploadZone = document.getElementById('wmUploadZone');
 document.getElementById('wmImageUpload').addEventListener('change', e => loadWatermarkFile(e.target.files[0]));
 wmUploadZone.addEventListener('dragover',  e => { e.preventDefault(); wmUploadZone.classList.add('drag-over'); });
-wmUploadZone.addEventListener('dragleave', () => wmUploadZone.classList.remove('drag-over'));
+wmUploadZone.addEventListener('dragleave', () => wmUploadZone.classList.remove('drag-over'); });
 wmUploadZone.addEventListener('drop', e => {
   e.preventDefault();
   wmUploadZone.classList.remove('drag-over');
@@ -1848,7 +1823,7 @@ document.querySelector('.align-group').addEventListener('click', e => {
 
 // ── Text inputs ─────────────────────────────
 const TEXT_INPUT_MAP = {
-  hadithText:      'hadith',
+  storyText:       'story',
   translationText: 'translation',
   urduText:        'urdu',
   sourceText:      'source',
